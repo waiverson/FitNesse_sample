@@ -29,7 +29,11 @@ class ActionTest(Fixture):
     _typeDict["put"] = "Default"
     _typeDict["get_token"] = "Default"
     _typeDict["post_json"] = "Default"
+    _typeDict["post_by_cookie"] = "Default"
     _typeDict["get_detail"] = "Default"
+    _typeDict["get_cookie"] = "Default"
+    _typeDict["get_by_cookie"] = "Default"
+    _typeDict["put_by_cookie"] = "Default"
     _typeDict["status"] = "Int"
     _typeDict["result"] = "String"
 
@@ -71,6 +75,25 @@ class ActionTest(Fixture):
         if ActionTest._typeDict.has_key("token") and isinstance(self.__headers,dict) and self.__headers.has_key('SESSION-TOKEN'):
             self.__headers['SESSION-TOKEN'] = ActionTest._typeDict["token"]
 
+    def get_cookie(self):
+        r = requests.post(self.__url, data=self.__data)
+        self.status = r.status_code
+        try:
+            ActionTest._typeDict["cookie"] = requests.utils.dict_from_cookiejar(r.cookies)
+            self.result = str(ActionTest._typeDict["cookie"])
+        except:
+            self.result = r.text
+
+    def get_by_cookie(self):
+        if ActionTest._typeDict.has_key("cookie"):
+            r = requests.get(self.__url, cookies = ActionTest._typeDict["cookie"])
+            self.status = r.status_code
+            self.result = r.text
+        else:
+            r = requests.get(self.__url)
+            self.status = r.status_code
+            self.result = r.text
+
     def get(self):
         self.set_token()
         r = requests.get(self.__url, params=self.__params, headers=self.__headers)
@@ -89,12 +112,31 @@ class ActionTest(Fixture):
         self.status = r.status_code
         self.result = r.text[:100]
 
+    def post_by_cookie(self):
+        if ActionTest._typeDict.has_key("cookie"):
+            r = requests.post(self.__url, data=self.__data, cookies = ActionTest._typeDict["cookie"])
+            self.status = r.status_code
+            self.result = r.text
+        else:
+            r = requests.post(self.__url, data=self.__data)
+            self.status = r.status_code
+            self.result = r.text
+
     def put(self):
         self.set_token()
         r = requests.put(self.__url, params=self.__params, headers=self.__headers)
         self.status = r.status_code
         self.result = r.text[:100]
 
+    def put_by_cookie(self):
+        if ActionTest._typeDict.has_key("cookie"):
+            r = requests.put(self.__url, data=self.__data, cookies = ActionTest._typeDict["cookie"])
+            self.status = r.status_code
+            self.result = r.text
+        else:
+            r = requests.put(self.__url, data=self.__data)
+            self.status = r.status_code
+            self.result = r.text
 
 
 
