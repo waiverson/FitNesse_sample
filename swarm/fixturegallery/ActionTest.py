@@ -7,6 +7,7 @@ from fit.Fixture import Fixture
 import requests, json
 
 
+
 class ActionTest(Fixture):
 
     _typeDict = {}
@@ -19,6 +20,8 @@ class ActionTest(Fixture):
         self.__data = None
         self.status = ""
         self.result = ""
+        self.actual = ""
+
 
     _typeDict["url"] = "String"
     _typeDict["headers"] = "Dict"
@@ -36,6 +39,7 @@ class ActionTest(Fixture):
     _typeDict["put_by_cookie"] = "Default"
     _typeDict["status"] = "Int"
     _typeDict["result"] = "String"
+    _typeDict["actual"] = "String"
 
     def url(self, s):
         self.__url = s
@@ -50,17 +54,20 @@ class ActionTest(Fixture):
         self.__data = dict(s)
 
     def result(self):
-        return self.result
+        return self.inspect_result(self.result)
 
     def status(self):
         return self.status
+
+    def actual(self):
+        return self.result
 
     def get_token(self):
         r = requests.post(self.__url, data=self.__data)
         self.status = r.status_code
         try:
-            self.result = json.loads(r.text)['result']['token']
-            ActionTest._typeDict["token"] = self.result
+            ActionTest._typeDict["token"] = json.loads(r.text)['result']['token']
+            self.result = r.text
         except:
             self.result = r.text
 
@@ -75,6 +82,7 @@ class ActionTest(Fixture):
         if ActionTest._typeDict.has_key("token") and isinstance(self.__headers,dict) and self.__headers.has_key('SESSION-TOKEN'):
             self.__headers['SESSION-TOKEN'] = ActionTest._typeDict["token"]
 
+    # get the website access cookie
     def get_cookie(self):
         r = requests.post(self.__url, data=self.__data)
         self.status = r.status_code
@@ -84,34 +92,39 @@ class ActionTest(Fixture):
         except:
             self.result = r.text
 
+    # make a GET request with cookie
     def get_by_cookie(self):
         if ActionTest._typeDict.has_key("cookie"):
             r = requests.get(self.__url, cookies = ActionTest._typeDict["cookie"])
             self.status = r.status_code
-            self.result = r.text
+            self.result = r.json()
         else:
             r = requests.get(self.__url)
             self.status = r.status_code
             self.result = r.text
 
+    # make a GET request
     def get(self):
         self.set_token()
         r = requests.get(self.__url, params=self.__params, headers=self.__headers)
         self.status = r.status_code
         self.result = r.text
 
+    # make a POST request
     def post(self):
         self.set_token()
         r = requests.post(self.__url, params=self.__params, headers=self.__headers, data=self.__data)
         self.status = r.status_code
-        self.result = r.text[:100]
+        self.result = r.text
 
+    # make a POST request with json data
     def post_json(self):
         self.set_token()
         r = requests.post(self.__url, params=self.__params, headers=self.__headers, data=json.dumps(self.__data))
         self.status = r.status_code
-        self.result = r.text[:100]
+        self.result = r.text
 
+    # make a POST request with cookie
     def post_by_cookie(self):
         if ActionTest._typeDict.has_key("cookie"):
             r = requests.post(self.__url, data=self.__data, cookies = ActionTest._typeDict["cookie"])
@@ -122,12 +135,14 @@ class ActionTest(Fixture):
             self.status = r.status_code
             self.result = r.text
 
+    # make a PUT request
     def put(self):
         self.set_token()
         r = requests.put(self.__url, params=self.__params, headers=self.__headers)
         self.status = r.status_code
-        self.result = r.text[:100]
+        self.result = r.text
 
+    # make a PUT request with cookie
     def put_by_cookie(self):
         if ActionTest._typeDict.has_key("cookie"):
             r = requests.put(self.__url, data=self.__data, cookies = ActionTest._typeDict["cookie"])
@@ -138,5 +153,11 @@ class ActionTest(Fixture):
             self.status = r.status_code
             self.result = r.text
 
-
+    # inspect response content
+    def inspect_result(self,result):
+        # inspect the result :response content should include {key,value}: {status:0}
+        try:
+            return "pass" if json.loads(result)["status"] == 0 else result
+        except ValueError:
+            return  result
 
