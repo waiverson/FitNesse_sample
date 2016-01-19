@@ -22,7 +22,6 @@ class ActionTest(Fixture):
         self.result = ""
         self.actual = ""
 
-
     _typeDict["url"] = "String"
     _typeDict["headers"] = "Dict"
     _typeDict["params"] = "Dict"
