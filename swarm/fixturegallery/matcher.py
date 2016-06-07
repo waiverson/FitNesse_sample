@@ -9,6 +9,7 @@ class Matcher(object):
 
     pass
 
+
 class InstanceMatcher(Matcher):
 
     def __init__(self):
@@ -18,27 +19,31 @@ class InstanceMatcher(Matcher):
         def __init__(self, **entries):
             self.__dict__.update(entries)
 
-    def _dict_to_object(self,kv):
+    def _dict_to_object(self, kv):
 
         """
         :param kv: 需要转为object的dict
-        :return:用于比较结果的，类的实例
+        :return:用于比较结果的实例
         """
 
-        if not bool(
-            kv or isinstance(kv, dict)):
+        if not bool(kv or isinstance(kv, dict)):
             return exception.TypeError
 
-        class Sample: pass
+        class Sample(object):
+            pass
+
+        sample = InstanceMatcher.Instance()
+
         for _k in kv:
             if type(kv[_k]) == dict:
-                setattr(Sample, _k, InstanceMatcher.Instance(**kv[_k]))
+                # setattr(sample, _k, InstanceMatcher.Instance(**kv[_k]))
+                setattr(sample, _k, self._dict_to_object(kv[_k]))
             else:
-                setattr(Sample, _k, kv[_k])
+                setattr(sample, _k, kv[_k])
 
-        return Sample
+        return sample
 
-    def by_struct(self,ex_result,ac_result):
+    def match_by_struct(self, ex_result, ac_result):
 
         try:
             expect = self._dict_to_object(ex_result)
@@ -48,21 +53,23 @@ class InstanceMatcher(Matcher):
             print ("Failed to convert to object: %s", e)
             sys.exit(-1)
 
-        def diff_struct(expect, actual):
-            if isinstance(expect.__dict__,dict) and isinstance(actual.__dict__,dict):
+        def diff(expect, actual):
+            if isinstance(expect.__dict__, dict) and isinstance(actual.__dict__, dict):
                 for k, v in expect.__dict__.items():
-                    print v
                     if isinstance(v, InstanceMatcher.Instance):
-                        diff_struct(v, actual.__dict__[k])
-                    if type(v) != type(actual.__dict__[k]):
+                        if diff(v, actual.__getattribute__(k)):
+                            continue
+                        else:
+                            return False
+                    if type(v) != type(actual.__getattribute__(k)):
                         return False
                 return True
             else:
                 return False
 
-        return diff_struct(expect, actual)
+        return diff(expect, actual)
 
-    def by_key_value(self,ex_result,ac_result):
+    def match_by_all(self, ex_result, ac_result):
         try:
             expect = self._dict_to_object(ex_result)
             actual = self._dict_to_object(ac_result)
@@ -70,24 +77,26 @@ class InstanceMatcher(Matcher):
             print ("Failed to convert to object: %s", e)
             sys.exit(-1)
 
-        def diff_value(expect, actual):
-            if isinstance(expect.__dict__,dict) and isinstance(actual.__dict__,dict):
+        def diff(expect, actual):
+            if isinstance(expect.__dict__, dict) and isinstance(actual.__dict__, dict):
                 for k, v in expect.__dict__.items():
-                    print v
                     if isinstance(v, InstanceMatcher.Instance):
-                        diff_value(v, actual.__dict__[k])
-                    if v != actual.__dict__[k]:
+                        if diff(v, actual.__getattribute__(k)):
+                            continue
+                        else:
+                            return False
+                    if v != actual.__getattribute__(k):
                         return False
                 return True
             else:
                 return False
 
-        return diff_value(expect, actual)
+        return diff(expect, actual)
 
 
-test_dict = {'a':1, 'b':2, 'c':'test', 'd':{'d1':'d1'},'code':200}
-test_dict2 = {'a':1, 'b':2, 'c':'test', 'd':{'d1':'d1'},'code':200}
-print InstanceMatcher().by_struct(test_dict,test_dict2)
-print InstanceMatcher().by_key_value(test_dict,test_dict2)
+test_dict = {'a':1, 'b':2, 'c':'test', 'd':{'d1':{'d1':2},'D2':3},'code':200}
+test_dict2 = {'a':1, 'b':2, 'c':'test', 'd':{'d1':{'d1':2},'D2':4},'code':200}
+print InstanceMatcher().match_by_struct(test_dict, test_dict2)
+print InstanceMatcher().match_by_all(test_dict, test_dict2)
 
 
