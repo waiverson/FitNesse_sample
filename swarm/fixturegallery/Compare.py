@@ -62,22 +62,22 @@ class InstanceCompareMode(CompareMode):
 
         return sample
 
-    def diff(self, object1, object2, pattern="kv"):
+    def diff(self, object1, object2, by="kv"):
         for k, v in object1.__dict__.items():
             if isinstance(v, InstanceCompareMode.Instance):
                 try:
                     object2.__getattribute__(k)
-                    self.diff(v, object2.__getattribute__(k), pattern)
+                    self.diff(v, object2.__getattribute__(k), by)
                 except AttributeError:
                     self.diff_result["object1"].update({k:v})
             else:
                 try:
-                    if pattern == "struct":
+                    if by == "struct":
                         if type(v) != type(object2.__getattribute__(k)):
                             self.diff_result["object1"].append({k:type(v)})
                             self.diff_result["object2"].append({k:type(object2.__getattribute__(k))})
 
-                    if pattern == "kv":
+                    if by == "kv":
                         if v != object2.__getattribute__(k):
                             self.diff_result["object1"].append({k:v})
                             self.diff_result["object2"].append({k:object2.__getattribute__(k)})
