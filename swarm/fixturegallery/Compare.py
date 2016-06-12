@@ -108,7 +108,7 @@ class JsonCompareMode(CompareMode):
 class DictCompareMode(CompareMode):
 
     def diff(self, dict1, dict2):
-        pass
+        return json.dumps(dict1) == json.dumps(dict2)
 
 
 
