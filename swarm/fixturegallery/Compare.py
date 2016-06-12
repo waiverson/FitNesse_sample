@@ -1,7 +1,7 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-import sys,inspect,json
+import sys,inspect,json,traceback
 import exception
 
 
@@ -32,8 +32,8 @@ class InstanceCompareMode(CompareMode):
 
     def __init__(self):
         super(InstanceCompareMode,self).__init__()
-        self.diff_result["object1"] = {}
-        self.diff_result["object2"] = {}
+        self.diff_result["object1"] = []
+        self.diff_result["object2"] = []
 
     class Instance(object):
         def __init__(self, **entries):
@@ -56,7 +56,6 @@ class InstanceCompareMode(CompareMode):
 
         for _k in kv:
             if type(kv[_k]) == dict:
-                # setattr(sample, _k, InstanceMatcher.Instance(**kv[_k]))
                 setattr(sample, _k, self._dict_to_object(kv[_k]))
             else:
                 setattr(sample, _k, kv[_k])
@@ -75,26 +74,18 @@ class InstanceCompareMode(CompareMode):
                 try:
                     if pattern == "struct":
                         if type(v) != type(object2.__getattribute__(k)):
-                            self.diff_result["object1"].update({k:type(v)})
-                            self.diff_result["object2"].update({k:type(object2.__getattribute__(k))})
+                            self.diff_result["object1"].append({k:type(v)})
+                            self.diff_result["object2"].append({k:type(object2.__getattribute__(k))})
 
                     if pattern == "kv":
                         if v != object2.__getattribute__(k):
-                            self.diff_result["object1"].update({k:v})
-                            self.diff_result["object2"].update({k:object2.__getattribute__(k)})
+                            self.diff_result["object1"].append({k:v})
+                            self.diff_result["object2"].append({k:object2.__getattribute__(k)})
 
                 except AttributeError:
                     self.diff_result["object1"].update({k:v})
 
         return self.diff_result
-
-    def match_by_struct(self, ex_result, ac_result):
-
-        return self.diff(ex_result, ac_result, pattern="struct")
-
-    def match_by_kv(self, ex_result, ac_result):
-
-        return self.diff(ex_result, ac_result, pattern="kv")
 
 
 class JsonCompareMode(CompareMode):
@@ -112,8 +103,8 @@ class DictCompareMode(CompareMode):
 
 
 
-test_dict = {'a':1, 'b':2, 'c':'test', 'd':{'d1':{'d4':3},'D2':4},'code':200}
-test_dict2 = {'a':1, 'b':2, 'c':'test', 'd':{'d1':{'d4':2},'D2':4},'code':200}
+test_dict = {'a':1, 'd4':'5', 'c':'test', 'd':{'d1':{'d4':3.0},'D2':4},'code':200}
+test_dict2 = {'a':1, 'd4':2, 'c':'test', 'd':{'d1':{'d4':2},'D2':4},'code':200}
 cc = {
 "status": 0,
 "message": "ok",
@@ -131,10 +122,6 @@ cc = {
 "detail_url": "http://api.map.baidu.com/place/detail?uid=5a8fb739999a70a54207c130&output=html&source=placeapi_v2"}}}
 
 compare = CompareMode.get_compare_mode("OBJECT")
-#print compare.diff(test_dict,test_dict2)
-object1 = compare._dict_to_object(cc)
-object2 = compare._dict_to_object(test_dict2)
-print compare.match_by_struct(object1, object2)
-print compare.match_by_kv(object1, object2)
+print compare.diff(compare._dict_to_object(test_dict), compare._dict_to_object(test_dict2),'kv')
 
 
