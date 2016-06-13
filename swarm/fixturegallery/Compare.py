@@ -39,7 +39,7 @@ class InstanceCompareMode(CompareMode):
         def __init__(self, **entries):
             self.__dict__.update(entries)
 
-    def _dict_to_object(self, kv):
+    def dict_to_object(self, kv):
 
         """
         :param kv: 需要转为object的dict
@@ -103,8 +103,8 @@ class DictCompareMode(CompareMode):
 
 
 
-test_dict = {'a':1, 'd4':'5', 'c':'test', 'd':{'d1':{'d4':3.0},'D2':4},'code':200}
-test_dict2 = {'a':1, 'd4':2, 'c':'test', 'd':{'d1':{'d4':2},'D2':4},'code':200}
+test_dict = {'a':1, 'd2':3, 'c':'test', 'd':{'d1':{'d4':3},'D2':4},'code':200}
+test_dict2 = {'a':1, 'd2':2, 'c':'test', 'd':{'d1':{'d4':2},'D2':4},'code':200}
 cc = {
 "status": 0,
 "message": "ok",
