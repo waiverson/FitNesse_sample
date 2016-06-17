@@ -118,15 +118,14 @@ class Core(Fixture):
                     k == '%s'
                 )
 
-        from Compare import CompareMode
         compare = CompareMode.get_compare_mode("OBJECT")
         result = compare.diff(compare.dict_to_object(type_handler(ob1)), compare.dict_to_object(ob2), diff_by)
-        list = filter(is_placeholder, result[result.keys()[0]])
+
+        # because fitnesse cell in table is not support null collection(dict,list,set,tuple),so use '%s' for placeholder .
+        # so,'%s' should be ignore
         result.update({result.keys()[0]:filter(is_placeholder, result[result.keys()[0]])})
         for k, v in result.items():
             if not v :
-                # because fitnesse cell in table is not support null collection(dict,list,set,tuple),so use '%s' for placeholder .
-                # so,'%s' should be ignore
                 return 'PASS'
             else:
                 return str(result)

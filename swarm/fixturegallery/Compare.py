@@ -62,6 +62,12 @@ class InstanceCompareMode(CompareMode):
         return sample
 
     def diff(self, object1, object2, by="kv"):
+        """
+        :param object1: 基准对象，表示为期望结果
+        :param object2: 校验对象，表示为实际结果
+        :param by: ‘kv’：比较key和value，‘struct’：比较key和value的类型
+        :return: {"object1":[{x:1},...],"obejct2":[{x:2},...]},{x:1},{x:2}为两者差异项（不包含其隶属关系）
+        """
         for k, v in object1.__dict__.items():
             if isinstance(v, InstanceCompareMode.Instance):
                 try:
@@ -74,7 +80,7 @@ class InstanceCompareMode(CompareMode):
                     if by == "struct":
                         if bool(type(v) != type(object2.__getattribute__(k))
                                 and (type(v) != str
-                                     and type(object2.__getattribute__(k))!= unicode)):
+                                and type(object2.__getattribute__(k))!= unicode)):
                             self.diff_result["object1"].append({k:type(v)})
                             self.diff_result["object2"].append({k:type(object2.__getattribute__(k))})
 
