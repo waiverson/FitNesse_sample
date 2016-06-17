@@ -8,7 +8,7 @@ import requests, json
 from Compare import CompareMode
 
 
-class core(Fixture):
+class Core(Fixture):
 
     _typeDict = {}
 
