@@ -20,6 +20,8 @@ Traceback (most recent call last):
 ValueError: need more than 0 values to unpack
 
 
-2、缩写fixture文件必须不存在任何错误，否则提示找不到module
+2、所写fixture文件必须不存在任何错误，否则提示找不到module
 
 3、上个case设置的类property值，会被外延到下个case，有时需要在下个case中重新置值 
+
+4、注意空格与制表符同时存在时，在fixture.doload（）时会报错.

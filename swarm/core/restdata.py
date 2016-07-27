@@ -12,6 +12,7 @@ class RestData(object):
             return None
         else:
             return self.raw
+
     @body.setter
     def body(self, raw_body):
         self.raw = raw_body
@@ -32,7 +33,6 @@ class RestResponse(RestData):
     @status_code.setter
     def status_code(self, scode):
         self._status_code = scode
-
 
     def __str__(self):
         return "{self._status_code},{self.body}".format(self=self)

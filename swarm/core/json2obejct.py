@@ -1,7 +1,7 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-import simplejson as json
+import json
 
 def recursive_json_loads(data):
     if isinstance(data, list):
