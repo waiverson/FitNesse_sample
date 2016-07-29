@@ -1,13 +1,12 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-import json
 
 from fit.Fixture import Fixture
-import requests
 
-from Compare import CompareMode
-from swarm.core.restdata import RestResponse
+import requests, json
+
+from restdata import RestResponse
 from variables import Variables
 
 class Core(Fixture):
@@ -25,7 +24,7 @@ class Core(Fixture):
         self._diff_result = ""
         self._actual_result = ""
         self._last_response = ""
-        self.checkheader = ""
+        self._validator = ""
 
     _typeDict["url"] = "String"
     def url(self, s):
@@ -47,6 +46,7 @@ class Core(Fixture):
     def expect_result(self, s):
         self._expect_result = dict(s)
 
+    # 提供校验方式："kv"：key&value值校验，"struct":比较key&value类型校验
     _typeDict["diff_by"] = "String"
     def diff_by(self, s):
         self._diff_by = s
@@ -55,15 +55,22 @@ class Core(Fixture):
     def diff_result(self):
         return self._diff_result
 
+    #提供将比较完的结果返回到fitnesse
     _typeDict["actual_result"] = "String"
     def actual_result(self):
         return self._actual_result
 
-	_typeDict["last_response"] = "Default"
+    # 提供将调用完的结果返回到fitnesse（必要时）
+    _typeDict["last_response"] = "Default"
     def last_response(self, s):
         self._last_response = s
 
-	#通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
+    # 设置校验器类型：OBJECT | DICT | JSON_SCHEMA | JSON
+    _typeDict["validator"] = "String"
+    def validator(self, s):
+        self._validator = s
+
+    #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
     _typeDict["debug"] = "String"
     def debug(self):
         return str(self._url)
@@ -75,7 +82,7 @@ class Core(Fixture):
         response_content = json.loads(r.content)
         self.set_last_response(response_content)
         self._actual_result = r.text
-        self._diff_result = self.compare(self._expect_result, response_content, self._diff_by)
+        self._diff_result = self.compare(self._expect_result, response_content, self._validator)
 
     #默认body为dict格式
     _typeDict["post_by_dict"] = "Default"
@@ -85,7 +92,7 @@ class Core(Fixture):
         response_content = json.loads(r.content)
         self.set_last_response(response_content)
         self._actual_result = r.text
-        self._diff_result = self.compare(self._expect_result, response_content, self._diff_by)
+        self._diff_result = self.compare(self._expect_result, response_content, self._validator)
 
     #默认body为json格式
     _typeDict["post"] = "Default"
@@ -95,12 +102,14 @@ class Core(Fixture):
         response_content = json.loads(r.content)
         self.set_last_response(response_content)
         self._actual_result = r.text
-        self._diff_result = self.compare(self._expect_result, response_content, self._diff_by)
+        self._diff_result = self.compare(self._expect_result, response_content, self._validator)
 
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
 
+    # 替换fitnesse输入的wrapper变量
     def substitute(self):
+        from variables import Variables
         if self._last_response:
             vs = Variables(self._last_response.body)
             if self._url:
@@ -113,17 +122,45 @@ class Core(Fixture):
                 self.data(vs.substitute(self._data))
 
     # inspect response content
-    def compare(self, ob1, ob2, diff_by):
-        # inspect the result by  compare
+    def compare(self, ob1, ob2, validator):
+        """
+        :param ob1:expect result
+        :param ob2: acutal result
+        :param validator: validator mode
+        :return:
+        """
+        from Compare import CompareMode
+        compare = CompareMode.get_compare_mode(validator)
+        if validator == "OBJECT":
+            ob1 = self.object_in_filter(ob1)
+            if self._diff_by:
+                result = compare.diff(ob1, ob2, self._diff_by)
+            else:
+                result = compare.diff(ob1, ob2)
+            result.update({result.keys()[0]:filter(self.object_out_filter, result[result.keys()[0]])})
+            for k, v in result.items():
+                if not v :
+                    return 'PASS'
+                else:
+                    return str(result)
+        else:
+            result = compare.diff(ob1, ob2)
+            return "PASS" if not result else str(result)
 
-        def type_handler(text):
-            for k, v in text.items():
-                if isinstance(v, dict):
-                    type_handler(v)
-                if isinstance(v, str) and v.lower() in ("false", "true"):
-                    text.update({k:json.loads(v.lower())})
-            return text
+    def object_in_filter(self, data):
+        def type_handler(data):
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    if isinstance(v, dict):
+                        type_handler(v)
+                    if isinstance(v, str) and v.lower() in ("false", "true"):
+                        data.update({k:json.loads(v.lower())})
+                return data
+        return type_handler(data)
 
+    def object_out_filter(self, kv):
+        # because fitnesse cell in table is not support null collection(dict,list,set,tuple),so use '%s' for placeholder .
+        # so,'%s' should be ignore
         def is_placeholder(kv):
             """
             Takes {k, v} dict, returns True if it's a placeholder.
@@ -132,18 +169,7 @@ class Core(Fixture):
                 return not bool(
                     k == '%s'
                 )
-
-        compare = CompareMode.get_compare_mode("OBJECT")
-        result = compare.diff(compare.dict_to_object(type_handler(ob1)), compare.dict_to_object(ob2), diff_by)
-
-        # because fitnesse cell in table is not support null collection(dict,list,set,tuple),so use '%s' for placeholder .
-        # so,'%s' should be ignore
-        result.update({result.keys()[0]:filter(is_placeholder, result[result.keys()[0]])})
-        for k, v in result.items():
-            if not v :
-                return 'PASS'
-            else:
-                return str(result)
+		return is_placeholder(kv)
 
 
 if __name__ == '__main__':
@@ -153,6 +179,7 @@ if __name__ == '__main__':
     core.url(_url)
     _url2 = "http://172.20.0.226:16001/WEBAPI/webserver/appkey/get"
     core.data({'user':'liuweiwei5@163.com','password':'liuweiwei'})
+    core.validator("OBJECT")
     core.post_by_dict()
     core.url(_url2)
     core.headers({'SESSION-TOKEN':'%result@token%'})

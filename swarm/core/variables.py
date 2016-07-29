@@ -3,7 +3,7 @@ __author__ = 'xyc'
 
 import re
 
-from swarm.core.json2obejct import recursive_json_loads
+from json2obejct import recursive_json_loads
 
 
 # 转换unicode输入为str输出
@@ -28,6 +28,7 @@ class Variables(object):
         else:
             self.replacement = recursive_json_loads(byteify(body))
 
+# variable中某变量的dsl表达式为：%result@industry_id% 或者 %result@list[0]@industry_id%
     def substitute(self, variable):
         variable = byteify(variable)
         if not variable:
@@ -67,23 +68,3 @@ class Variables(object):
         else:
             False
 
-
-if __name__ == "__main__":
-
-    resource = "http://172.20.0.213:16001/getuserinfo/%tokenID%/%group@user@id[0]%"
-    # 带列表的json定位
-    bodycontent = {"user":"%status%","group":"%result@list[0]@industry_id%"}
-    body = {"status":0,"result":{"list":[{"industry_id":3001,"id":"36854","name":"北京市105中学"}
-            ,{"industry_id":3003,"id":"70433","name":"中国人民解放军51052部队医院"}
-            ,{"industry_id":3001,"id":"15404","name":"贵阳市105地质队幼儿园"}
-            ,{"industry_id":3003,"id":"68352","name":"中国人民解放军第105医院"}
-            ,{"industry_id":3003,"id":"65556","name":"中国人民解放军第150医院"}
-            ,{"industry_id":3003,"id":"67127","name":"中国人民解放军37015部队医院"}
-            ,{"industry_id":3003,"id":"80435","name":"中国人民解放军51034部队桥东医院"}]}}
-
-    va = Variables(body)
-    #jobject = recursive_json_loads(va.RestResponse)
-    #exec("print jobject.group.user.id")
-    print va.substitute(bodycontent)
-
-    #print recursive_json_loads(Variables.RestResponse).group.user.id
