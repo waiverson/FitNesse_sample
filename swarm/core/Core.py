@@ -8,6 +8,9 @@ import requests, json
 
 from restdata import RestResponse
 from variables import Variables
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 
 class Core(Fixture):
 
