@@ -84,7 +84,7 @@ class Core(Fixture):
         r = requests.get(self._url, params=self._params, headers=self._header)
         response_content = json.loads(r.content)
         self.set_last_response(response_content)
-        self._actual_result = r.text
+        self._actual_result = r.text.decode("unicode_escape")
         self._diff_result = self.compare(self._expect_result, response_content, self._validator)
 
     #默认body为dict格式
@@ -94,7 +94,7 @@ class Core(Fixture):
         r = requests.post(self._url, params=self._params, headers=self._header, data=self._data)
         response_content = json.loads(r.content)
         self.set_last_response(response_content)
-        self._actual_result = r.text
+        self._actual_result = r.text.decode("unicode_escape")
         self._diff_result = self.compare(self._expect_result, response_content, self._validator)
 
     #默认body为json格式
@@ -104,7 +104,7 @@ class Core(Fixture):
         r = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
         response_content = json.loads(r.content)
         self.set_last_response(response_content)
-        self._actual_result = r.text
+        self._actual_result = r.text.decode("unicode_escape")
         self._diff_result = self.compare(self._expect_result, response_content, self._validator)
 
     def set_last_response(self,body):
@@ -178,14 +178,19 @@ class Core(Fixture):
 if __name__ == '__main__':
     core = Core()
     core._expect_result = {"status": 0,"%s": 0,"result": {"first_login": 'false',"is_active": 'true',"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170}}
-    _url = "http://172.20.0.226:16001/WEBAPI/auth/accessToken/"
+    _url = "http://172.20.0.224:16001/WEBAPI/auth/accessToken/"
     core.url(_url)
-    _url2 = "http://172.20.0.226:16001/WEBAPI/webserver/appkey/get"
-    core.data({'user':'liuweiwei5@163.com','password':'liuweiwei'})
+    core.data({'user':'xuetianshi.668899@163.com','password':'123456@a'})
     core.validator("OBJECT")
     core.post_by_dict()
+    _url2 = "http://172.20.0.224:16001/WEBAPI/webserver/appkey/get"
     core.url(_url2)
     core.headers({'SESSION-TOKEN':'%result@token%'})
+    core.get()
+    core.headers({'APPKEY':'%result@app_key%'})
+    _url3 = "http://172.20.0.224:16001/api/current/client/matches/address"
+    core.url(_url3)
+    core.params({'address':'105'})
     core.get()
     #response_content = json.loads(r.content)
     #core._diff_by = 'kv'
