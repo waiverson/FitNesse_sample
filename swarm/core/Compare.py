@@ -3,6 +3,7 @@ __author__ = 'xyc'
 
 import sys,inspect,json,traceback
 from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
 class CompareMode(object):
 
@@ -126,6 +127,10 @@ class JsonSchemaCompareMode(CompareMode):
         :param instance: json or dict
         :return:
         """
-        return validate(instance, json_schema)
+        #return validate(instance, json_schema)
+        try:
+            return validate(instance, json_schema)
+        except ValidationError, e:
+            return  '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
 
 
