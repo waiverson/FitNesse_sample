@@ -78,6 +78,16 @@ class Core(Fixture):
     def debug(self):
         return str(self._url)
 
+    def clean_params(self):
+        self._params = None
+
+    def clean_data(self):
+        self._data = None
+
+    def clean_quary_condition(self):
+        self.clean_params()
+        self.clean_data()
+
     _typeDict["get"] = "Default"
     def get(self):
         self.substitute()
@@ -86,6 +96,7 @@ class Core(Fixture):
         self.set_last_response(response_content)
         self._actual_result = r.text.decode("unicode_escape")
         self._diff_result = self.compare(self._expect_result, response_content, self._validator)
+        self.clean_quary_condition()
 
     #默认body为dict格式
     _typeDict["post_by_dict"] = "Default"
@@ -96,6 +107,7 @@ class Core(Fixture):
         self.set_last_response(response_content)
         self._actual_result = r.text.decode("unicode_escape")
         self._diff_result = self.compare(self._expect_result, response_content, self._validator)
+        self.clean_quary_condition()
 
     #默认body为json格式
     _typeDict["post"] = "Default"
@@ -106,6 +118,7 @@ class Core(Fixture):
         self.set_last_response(response_content)
         self._actual_result = r.text.decode("unicode_escape")
         self._diff_result = self.compare(self._expect_result, response_content, self._validator)
+        self.clean_quary_params()
 
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
