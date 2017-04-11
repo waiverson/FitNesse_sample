@@ -84,41 +84,50 @@ class Core(Fixture):
     def clean_data(self):
         self._data = None
 
-    def clean_quary_condition(self):
+    def clean_last_quary_condition(self):
         self.clean_params()
         self.clean_data()
 
+    def clean_diff_result(self):
+        self._diff_result = ""
+
+    def clean_actual_result(self):
+        self._actual_result = ""
+
+    def clean_last_result(self):
+        self.clean_diff_result()
+        self.clean_actual_result()
+
+    def setup(self):
+        self.clean_last_result()
+        self.substitute()
+
+    def tearDown(self, resp):
+        rc = json.loads(resp.content)
+        self.set_last_response(rc)
+        self._actual_result = resp.text.decode("unicode_escape")
+        self._diff_result = self.compare(self._expect_result, rc, self._validator)
+        self.clean_last_quary_condition()
+
     _typeDict["get"] = "Default"
     def get(self):
-        self.substitute()
-        r = requests.get(self._url, params=self._params, headers=self._header)
-        response_content = json.loads(r.content)
-        self.set_last_response(response_content)
-        self._actual_result = r.text.decode("unicode_escape")
-        self._diff_result = self.compare(self._expect_result, response_content, self._validator)
-        self.clean_quary_condition()
+        self.setup()
+        resp = requests.get(self._url, params=self._params, headers=self._header)
+        self.tearDown(resp)
 
     #默认body为dict格式
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
-        self.substitute()
-        r = requests.post(self._url, params=self._params, headers=self._header, data=self._data)
-        response_content = json.loads(r.content)
-        self.set_last_response(response_content)
-        self._actual_result = r.text.decode("unicode_escape")
-        self._diff_result = self.compare(self._expect_result, response_content, self._validator)
-        self.clean_quary_condition()
+        self.setup()
+        resp = requests.post(self._url, params=self._params, headers=self._header, data=self._data)
+        self.tearDown(resp)
 
     #默认body为json格式
     _typeDict["post"] = "Default"
     def post(self):
-        self.substitute()
-        r = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
-        response_content = json.loads(r.content)
-        self.set_last_response(response_content)
-        self._actual_result = r.text.decode("unicode_escape")
-        self._diff_result = self.compare(self._expect_result, response_content, self._validator)
-        self.clean_quary_params()
+        self.setup()
+        resp = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
+        self.tearDown(resp)
 
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
