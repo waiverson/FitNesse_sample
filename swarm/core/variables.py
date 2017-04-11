@@ -68,3 +68,6 @@ class Variables(object):
         else:
             False
 
+if __name__ == '__main__':
+
+    Variables().substitute({"text":[1,2,3]})
