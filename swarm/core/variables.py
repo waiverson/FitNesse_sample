@@ -34,33 +34,39 @@ class Variables(object):
         if not variable:
             return None
         if isinstance(variable, str):
-            if self.check(variable) and self.replacement:
-                match = Variables.VARIABLES_PATTERN.findall(variable)
-                text = variable.replace("%", "")
+            return self.substitute_for_str(variable)
+        elif isinstance(variable, dict):
+            return self.substitute_for_dict(variable)
+        else:
+            return variable
+
+    def substitute_for_str(self, variable):
+        if self.check(variable) and self.replacement:
+            match = Variables.VARIABLES_PATTERN.findall(variable)
+            text = variable.replace("%", "")
+            for m in match:
+                if "@" in m:
+                    v = eval("self.replacement.{key}".format(self = self,
+                                                       key=m.replace("@",".")))
+                    text = text.replace(m, str(v))
+                else:
+                    text =text.replace(m, str(self.replacement[m]))
+            return text
+        return variable
+
+    def substitute_for_dict(self, variable):
+        for k in variable.keys():
+            if self.check(variable[k]) and self.replacement:
+                match = Variables.VARIABLES_PATTERN.findall(variable[k])
+                variable.update({k:variable[k].replace("%", "")})
                 for m in match:
                     if "@" in m:
                         v = eval("self.replacement.{key}".format(self = self,
                                                            key=m.replace("@",".")))
-                        text = text.replace(m, str(v))
+                        variable.update({k:variable[k].replace(m, str(v))})
                     else:
-                        text =text.replace(m, str(self.replacement[m]))
-                return text
-            return variable
-        elif isinstance(variable, dict):
-            for k in variable.keys():
-                if self.check(variable[k]) and self.replacement:
-                    match = Variables.VARIABLES_PATTERN.findall(variable[k])
-                    variable.update({k:variable[k].replace("%", "")})
-                    for m in match:
-                        if "@" in m:
-                            v = eval("self.replacement.{key}".format(self = self,
-                                                               key=m.replace("@",".")))
-                            variable.update({k:variable[k].replace(m, str(v))})
-                        else:
-                            variable.update({k:variable[k].replace(m,str(self.replacement[m]))})
-            return variable
-        else:
-            return variable
+                        variable.update({k:variable[k].replace(m,str(self.replacement[m]))})
+        return variable
 
     def check(self, text):
         if isinstance(text, str) and "%" in text:
