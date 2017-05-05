@@ -3,12 +3,10 @@ __author__ = 'xyc'
 
 
 from fit.Fixture import Fixture
-
-import requests, json
-
+import requests, json, sys, time
 from restdata import RestResponse
 from variables import Variables
-import sys
+
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -28,6 +26,8 @@ class Core(Fixture):
         self._actual_result = ""
         self._last_response = ""
         self._validator = ""
+        self._wait_time = ""
+        self._slot = ""
 
     _typeDict["url"] = "String"
     def url(self, s):
@@ -73,6 +73,16 @@ class Core(Fixture):
     def validator(self, s):
         self._validator = s
 
+    # 设置等待时长，单位：秒
+    _typeDict["wait_time"] = "String"
+    def wait_time(self, s):
+        self._wait_time = s
+
+    # 将某值缓存起来，以便后续接口直接使用
+    _typeDict["slot"] = "String"
+    def slot(self, s):
+        self._slot = s
+
     #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
     _typeDict["debug"] = "String"
     def debug(self):
@@ -83,6 +93,7 @@ class Core(Fixture):
 
     def clean_data(self):
         self._data = None
+        self._wait_time = None
 
     def clean_last_quary_condition(self):
         self.clean_params()
@@ -98,16 +109,10 @@ class Core(Fixture):
         self.clean_diff_result()
         self.clean_actual_result()
 
+    #请求开始前，准备
     def setup(self):
         self.clean_last_result()
         self.substitute()
-
-    def tearDown(self, resp):
-        rc = json.loads(resp.content)
-        self.set_last_response(rc)
-        self._actual_result = resp.text.decode("unicode_escape")
-        self._diff_result = self.compare(self._expect_result, rc, self._validator)
-        self.clean_last_quary_condition()
 
     _typeDict["get"] = "Default"
     def get(self):
@@ -129,22 +134,42 @@ class Core(Fixture):
         resp = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
         self.tearDown(resp)
 
+    #请求结束时，清理
+    def tearDown(self, resp):
+        try:
+            rc = json.loads(resp.content)
+            self.set_last_response(rc)
+            self._actual_result = resp.text.decode("unicode_escape")
+            self._diff_result = self.compare(self._expect_result, rc, self._validator)
+            if self._wait_time:
+                time.sleep(int(self._wait_time))
+            self.clean_last_quary_condition()
+        except:
+            self._actual_result = resp.text.decode("unicode_escape")
+
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
 
+    #缓存值替换
+    def slot_substitute(self):
+        if self._slot:
+            if self._url and 'slot' in self._url:
+                self._url.replace("slot", self._slot)
+            for query_param in [x for x in [self._header, self._params, self._data] if x and 'slot' in x.values()]:
+                slot_key = query_param.keys()[query_param.values().index('slot')]
+                query_param[slot_key] = self._slot
+
     # 替换fitnesse输入的wrapper变量
     def substitute(self):
+        self.slot_substitute()
         from variables import Variables
         if self._last_response:
             vs = Variables(self._last_response.body)
-            if self._url:
-                self.url(vs.substitute(self._url))
-            if self._header:
-                self.headers(vs.substitute(self._header))
-            if self._params:
-                self.params(vs.substitute(self._params))
-            if self._data:
-                self.data(vs.substitute(self._data))
+            if self._slot:self.slot(vs.substitute(self._slot))
+            if self._url: self.url(vs.substitute(self._url))
+            if self._header: self.headers(vs.substitute(self._header))
+            if self._params:self.params(vs.substitute(self._params))
+            if self._data:self.data(vs.substitute(self._data))
 
     # inspect response content
     def compare(self, ob1, ob2, validator):
