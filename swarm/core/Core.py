@@ -49,43 +49,43 @@ class Core(Fixture):
     def expect_result(self, s):
         self._expect_result = dict(s)
 
-    # 提供校验方式："kv"：key&value值校验，"struct":比较key&value类型校验
     _typeDict["diff_by"] = "String"
     def diff_by(self, s):
+    # 提供校验方式："kv"：key&value值校验，"struct":比较key&value类型校验
         self._diff_by = s
 
     _typeDict["diff_result"] = "String"
     def diff_result(self):
         return self._diff_result
 
-    #提供将比较完的结果返回到fitnesse
     _typeDict["actual_result"] = "String"
     def actual_result(self):
+    #将比较完的结果返回到fitnesse
         return self._actual_result
 
-    # 提供将调用完的结果返回到fitnesse（必要时）
     _typeDict["last_response"] = "Default"
     def last_response(self, s):
+    # 提供将调用完的结果返回到fitnesse（必要时）
         self._last_response = s
 
-    # 设置校验器类型：OBJECT | DICT | JSON_SCHEMA | JSON
     _typeDict["validator"] = "String"
     def validator(self, s):
+    # 设置校验器类型：OBJECT | DICT | JSON_SCHEMA | JSON
         self._validator = s
 
-    # 设置等待时长，单位：秒
     _typeDict["wait_time"] = "String"
     def wait_time(self, s):
+    # 设置等待时长，单位：秒
         self._wait_time = s
 
-    # 将某值缓存起来，以便后续接口直接使用
     _typeDict["slot"] = "String"
     def slot(self, s):
+    # 将某值缓存起来，以便后续接口直接使用
         self._slot = s
 
-    #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
     _typeDict["debug"] = "String"
     def debug(self):
+    #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
         return str(self._url)
 
     def clean_params(self):
@@ -109,32 +109,10 @@ class Core(Fixture):
         self.clean_diff_result()
         self.clean_actual_result()
 
-    #请求开始前，准备
     def setup(self):
         self.clean_last_result()
         self.substitute()
 
-    _typeDict["get"] = "Default"
-    def get(self):
-        self.setup()
-        resp = requests.get(self._url, params=self._params, headers=self._header)
-        self.tearDown(resp)
-
-    #默认body为dict格式
-    _typeDict["post_by_dict"] = "Default"
-    def post_by_dict(self):
-        self.setup()
-        resp = requests.post(self._url, params=self._params, headers=self._header, data=self._data)
-        self.tearDown(resp)
-
-    #默认body为json格式
-    _typeDict["post"] = "Default"
-    def post(self):
-        self.setup()
-        resp = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
-        self.tearDown(resp)
-
-    #请求结束时，清理
     def tearDown(self, resp):
         try:
             rc = json.loads(resp.content)
@@ -147,11 +125,31 @@ class Core(Fixture):
         except:
             self._actual_result = resp.text.decode("unicode_escape")
 
+    _typeDict["get"] = "Default"
+    def get(self):
+        self.setup()
+        resp = requests.get(self._url, params=self._params, headers=self._header)
+        self.tearDown(resp)
+
+    _typeDict["post_by_dict"] = "Default"
+    def post_by_dict(self):
+    #默认body为dict格式
+        self.setup()
+        resp = requests.post(self._url, params=self._params, headers=self._header, data=self._data)
+        self.tearDown(resp)
+
+    _typeDict["post"] = "Default"
+    def post(self):
+    #默认body为json格式
+        self.setup()
+        resp = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
+        self.tearDown(resp)
+
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
 
-    #缓存值替换
     def slot_substitute(self):
+    #缓存值替换
         if self._slot:
             if self._url and '%slot%' in self._url:
                 self._url.replace("%slot%", self._slot)
@@ -159,8 +157,8 @@ class Core(Fixture):
                 slot_key = query_param.keys()[query_param.values().index('%slot%')]
                 query_param[slot_key] = self._slot
 
-    # 替换fitnesse输入的wrapper变量
     def substitute(self):
+    # 替换fitnesse输入的wrapper变量
         self.slot_substitute()
         from variables import Variables
         if self._last_response:
