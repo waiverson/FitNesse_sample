@@ -1,16 +1,16 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-import sys,inspect,json,traceback
+import sys, inspect, json, traceback
+from unittest import TestCase as assertValidate
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
 class CompareMode(object):
 
-    JSON_MODE = "JSON"
     OBJECT_MODE = "OBJECT"
-    DICT_MODE = "DICT"
     JSON_SCHEMA_MODE = "JSON_SCHEMA"
+    ASSERT_MODE = "ASSERT"
 
     def __init__(self):
         self.diff_result = {}
@@ -102,20 +102,6 @@ class InstanceCompareMode(CompareMode):
 
         return self.diff_result
 
-
-class JsonCompareMode(CompareMode):
-
-    def __init__(self):
-        pass
-
-    def diff(self, json1, json2):
-        pass
-
-class DictCompareMode(CompareMode):
-
-    def diff(self, dict1, dict2):
-        return json.dumps(dict1) == json.dumps(dict2)
-
 class JsonSchemaCompareMode(CompareMode):
 
     def __init__(self):
@@ -133,4 +119,18 @@ class JsonSchemaCompareMode(CompareMode):
         except ValidationError, e:
             return  '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
 
+class AssertCompareMode(CompareMode, assertValidate):
+
+    def __init__(self):
+        self._type_equality_ = {'Equal': 'assertEqual'}
+
+    def diff(self, expect, actual, by):
+        try:
+            asserter = self._type_equality_.get(by, 'assertEqual')
+            if asserter is not None:
+                if isinstance(asserter, basestring):
+                    asserter = getattr(self, asserter)
+                return asserter(expect, actual)
+        except ValidationError, e:
+            return  '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
 
