@@ -153,10 +153,10 @@ class Core(Fixture):
     #缓存值替换
     def slot_substitute(self):
         if self._slot:
-            if self._url and 'slot' in self._url:
-                self._url.replace("slot", self._slot)
-            for query_param in [x for x in [self._header, self._params, self._data] if x and 'slot' in x.values()]:
-                slot_key = query_param.keys()[query_param.values().index('slot')]
+            if self._url and '%slot%' in self._url:
+                self._url.replace("%slot%", self._slot)
+            for query_param in [x for x in [self._header, self._params, self._data] if x and '%slot%' in x.values()]:
+                slot_key = query_param.keys()[query_param.values().index('%slot%')]
                 query_param[slot_key] = self._slot
 
     # 替换fitnesse输入的wrapper变量
@@ -222,25 +222,5 @@ class Core(Fixture):
 		return is_placeholder(kv)
 
 
-if __name__ == '__main__':
-    core = Core()
-    core._expect_result = {"status": 0,"%s": 0,"result": {"first_login": 'false',"is_active": 'true',"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170}}
-    _url = "http://172.20.0.224:16001/WEBAPI/auth/accessToken/"
-    core.url(_url)
-    core.data({'user':'xuetianshi.668899@163.com','password':'123456@a'})
-    core.validator("OBJECT")
-    core.post_by_dict()
-    _url2 = "http://172.20.0.224:16001/WEBAPI/webserver/appkey/get"
-    core.url(_url2)
-    core.headers({'SESSION-TOKEN':'%result@token%'})
-    core.get()
-    core.headers({'APPKEY':'%result@app_key%'})
-    _url3 = "http://172.20.0.224:16001/api/current/client/matches/address"
-    core.url(_url3)
-    core.params({'address':'105'})
-    core.get()
-    #response_content = json.loads(r.content)
-    #core._diff_by = 'kv'
-    #print core.compare(core._expect_result, response_content, core._diff_by)
 
 
