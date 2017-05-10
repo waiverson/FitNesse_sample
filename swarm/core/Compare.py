@@ -131,7 +131,11 @@ class AssertCompareMode(assertValidate):
                                     frozenset: 'assertSetEqual'
                                 }
         if type(first) is type(second):
-            return type_equality_func.get(type(first))
+            asserter = type_equality_func.get(type(first))
+            if asserter is not None:
+                    if isinstance(asserter, basestring):
+                        asserter = getattr(self, asserter)
+                    return asserter(first, second)
 
     def diff(self, expect, actual, by=None):
         try:
@@ -142,4 +146,5 @@ class AssertCompareMode(assertValidate):
                     return asserter(expect, actual)
         except AssertionError, e:
             return '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
+
 
