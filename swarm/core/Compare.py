@@ -17,14 +17,12 @@ class CompareMode(object):
 
     @staticmethod
     def get_compare_mode(mode):
-        if mode.upper() == CompareMode.JSON_MODE:
-            return JsonCompareMode()
-        elif mode.upper() == CompareMode.DICT_MODE:
-            return DictCompareMode()
-        elif mode.upper() == CompareMode.OBJECT_MODE:
+        if mode.upper() == CompareMode.OBJECT_MODE:
             return InstanceCompareMode()
         elif mode.upper() == CompareMode.JSON_SCHEMA_MODE:
             return JsonSchemaCompareMode()
+        elif mode.upper() == CompareMode.ASSERT_MODE:
+            return AssertCompareMode()
 
     def diff(self):
         pass
@@ -119,14 +117,25 @@ class JsonSchemaCompareMode(CompareMode):
         except ValidationError, e:
             return  '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
 
-class AssertCompareMode(CompareMode, assertValidate):
+class AssertCompareMode(assertValidate):
 
     def __init__(self):
-        self._type_equality_ = {'Equal': 'assertEqual'}
+        self._assert_funcs_ = {'Equal': 'assertEqual'}
 
-    def diff(self, expect, actual, by):
+    def assertEqual(self, first, second, msg=None):
+        self.type_equality_func = {dict: 'assertDictEqual',
+                                    list: 'assertListEqual',
+                                    tuple: 'assertTupleEqual',
+                                    set: 'assertSetEqual',
+                                    frozenset: 'assertSetEqual'
+                                }
+        if type(first) is type(second):
+            asserter = self.type_equality_func.get(type(first))
+            return asserter
+
+    def diff(self, expect, actual, by=None):
         try:
-            asserter = self._type_equality_.get(by, 'assertEqual')
+            asserter = self._assert_funcs_.get(by, 'assertEqual')
             if asserter is not None:
                 if isinstance(asserter, basestring):
                     asserter = getattr(self, asserter)
