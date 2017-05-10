@@ -6,6 +6,7 @@ from unittest import TestCase as assertValidate
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
+
 class CompareMode(object):
 
     OBJECT_MODE = "OBJECT"
@@ -26,7 +27,6 @@ class CompareMode(object):
 
     def diff(self):
         pass
-
 
 
 class InstanceCompareMode(CompareMode):
@@ -100,6 +100,7 @@ class InstanceCompareMode(CompareMode):
 
         return self.diff_result
 
+
 class JsonSchemaCompareMode(CompareMode):
 
     def __init__(self):
@@ -111,11 +112,11 @@ class JsonSchemaCompareMode(CompareMode):
         :param instance: json or dict
         :return:
         """
-        #return validate(instance, json_schema)
         try:
             return validate(instance, json_schema)
         except ValidationError, e:
-            return  '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
+            return '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
+
 
 class AssertCompareMode(assertValidate):
 
@@ -123,15 +124,14 @@ class AssertCompareMode(assertValidate):
         self._assert_funcs_ = {'Equal': 'assertEqual'}
 
     def assertEqual(self, first, second, msg=None):
-        self.type_equality_func = {dict: 'assertDictEqual',
+        type_equality_func = {dict: 'assertDictEqual',
                                     list: 'assertListEqual',
                                     tuple: 'assertTupleEqual',
                                     set: 'assertSetEqual',
                                     frozenset: 'assertSetEqual'
                                 }
         if type(first) is type(second):
-            asserter = self.type_equality_func.get(type(first))
-            return asserter
+            return type_equality_func.get(type(first))
 
     def diff(self, expect, actual, by=None):
         try:
@@ -139,7 +139,7 @@ class AssertCompareMode(assertValidate):
             if asserter is not None:
                 if isinstance(asserter, basestring):
                     asserter = getattr(self, asserter)
-                return asserter(expect, actual)
-        except ValidationError, e:
-            return  '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
+                    return asserter(expect, actual)
+        except AssertionError, e:
+            return '匹配失败原因:\t{}\n具体信息:\n{}'.format(e.message, traceback.format_exc())
 

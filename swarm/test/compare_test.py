@@ -8,7 +8,6 @@ sys.path.append('%s/../core' % PATH)
 from swarm.core.Compare import *
 
 
-
 test_json = {"result": {"group": "","list": [{
         "axis_err": [400,800,1200,1600,2000],
         "axis_value": [10,20,30],
@@ -35,15 +34,17 @@ test_json = {"result": {"group": "","list": [{
   "status": 0
 }
 
-replacement2 = {"status": 0,"result": [{"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
+replacement2 = {"statuss": 0,"result": [{"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
                                              {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
 
 replacement = {"status": 0,"result": [{"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
                                              {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
+
 
 class CompareTest(unittest.TestCase):
 
     def test_assertCompareMode_of_equals(self):
         validator = AssertCompareMode()
         rs = validator.diff(replacement, replacement2)
-        self.assertEqual(replacement, replacement2)
+        print rs
+        self.assertEqual('', rs)
