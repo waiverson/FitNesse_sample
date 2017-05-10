@@ -121,7 +121,12 @@ class JsonSchemaCompareMode(CompareMode):
 class AssertCompareMode(assertValidate):
 
     def __init__(self):
-        self._assert_funcs_ = {'Equal': 'assertEqual'}
+        self._assert_funcs_ = {'EQUAL': 'assertEqual',
+                               'IN':'assertIn',
+                               'ITEMSEQUAL':'assertItemsEqual',
+                               'REGEXPMATCHES':'assertRegexpMatches',
+                               'DICTCONTAINSSUBSET':'assertDictContainsSubset'
+                               }
 
     def assertEqual(self, first, second, msg=None):
         type_equality_func = {dict: 'assertDictEqual',
@@ -137,9 +142,9 @@ class AssertCompareMode(assertValidate):
                         asserter = getattr(self, asserter)
                     return asserter(first, second)
 
-    def diff(self, expect, actual, by=None):
+    def diff(self, expect, actual, by='EQUAL'):
         try:
-            asserter = self._assert_funcs_.get(by, 'assertEqual')
+            asserter = self._assert_funcs_.get(by.upper(), 'assertEqual')
             if asserter is not None:
                 if isinstance(asserter, basestring):
                     asserter = getattr(self, asserter)

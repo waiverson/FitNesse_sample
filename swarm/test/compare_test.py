@@ -38,4 +38,4 @@ class CompareTest(unittest.TestCase):
 
     def test_assertCompareMode_of_DictContainsSubset(self):
         validator = AssertCompareMode()
-        self.assertEqual(None, validator.diff({"status":0}, self.replacement2, 'DictContain'))
+        self.assertEqual(None, validator.diff({"status":0}, self.replacement2, 'DICTCONTAINSSUBSET'))
