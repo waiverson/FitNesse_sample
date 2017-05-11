@@ -18,8 +18,8 @@ class Core(Fixture):
         Fixture.__init__(self)
         self._url = ""
         self._header = {}
-        self._params = None
-        self._data = None
+        self._params = {}
+        self._data = {}
         self._expect_result = None
         self._diff_by = ""
         self._diff_result = ""
@@ -27,7 +27,11 @@ class Core(Fixture):
         self._last_response = ""
         self._validator = ""
         self._wait_time = ""
-        self._slot = ""
+        self._slot = None
+        self._set_request_field_func = {'url': self._url,
+                                        'headers': self._header,
+                                        'params': self._params,
+                                        'data': self._data}
 
     _typeDict["url"] = "String"
     def url(self, s):
@@ -39,11 +43,11 @@ class Core(Fixture):
 
     _typeDict["params"] = "Dict"
     def params(self, s):
-        self._params = dict(s)
+        self._params.update(dict(s))
 
     _typeDict["data"] = "Dict"
     def data(self, s):
-        self._data = dict(s)
+        self._data.update(dict(s))
 
     _typeDict["expect_result"] = "Dict"
     def expect_result(self, s):
@@ -88,16 +92,10 @@ class Core(Fixture):
     #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
         return str(self._url)
 
-    def clean_params(self):
-        self._params = None
-
-    def clean_data(self):
-        self._data = None
-        self._wait_time = None
-
     def clean_last_quary_condition(self):
-        self.clean_params()
-        self.clean_data()
+        self._params.clear()
+        self._data.clear()
+        self._wait_time = None
 
     def clean_diff_result(self):
         self._diff_result = ""
@@ -148,7 +146,7 @@ class Core(Fixture):
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
 
-    def slot_substitute(self):
+    def slot_substitute_stub(self):
     #缓存值替换
         if self._slot:
             if self._url and '%slot%' in self._url:
@@ -157,30 +155,36 @@ class Core(Fixture):
                 slot_key = query_param.keys()[query_param.values().index('%slot%')]
                 query_param[slot_key] = self._slot
 
-    def slot_substitute_stub(self, var):
-    #缓存值替换
-        if self._slot:
-            if isinstance(var, str) and var and '%slot%' in var:
-                self.var.replace("%slot%", self._slot)
-            elif isinstance(var, dict) and var and '%slot%' in var.values():
-                slot_key = var.keys()[var.values().index('%slot%')]
-                var[slot_key] = self._slot
+    def get_slot_substituted_variable(self, variable):
+
+        def get_slot(var):
+            if self._slot is None:
+                return var
+            if var == '%slot%':
+                return self._slot
+            elif '%slot%' in var:
+                return var.replace("%slot%", str(self._slot))
+            else:
+                return var
+
+        if isinstance(variable, dict) and variable:
+            for k in variable.keys():
+                substituted_v = self.get_slot_substituted_variable(variable[k])
+                variable.update({k: substituted_v})
+            return variable
+        elif isinstance(variable, list) and variable:
+            return [self.get_slot_substituted_variable(v) for v in variable]
+        elif isinstance(variable, tuple) and variable:
+            return tuple([self.get_slot_substituted_variable(v) for v in variable])
+        else:
+            return get_slot(variable) if isinstance(variable, str) else variable
 
     def substitute(self):
     # 替换fitnesse输入的wrapper变量
-        self.slot_substitute()
-        for var in [self._url, self._header, self._params, self._data]:
+        for key, var in self._set_request_field_func.iteritems():
             if var:
-                var = self.slot_substitute_stub()
-                var = self.variable_substitute(var)
-        # from variables import Variables
-        # if self._last_response:
-        #     vs = Variables(self._last_response.body)
-        #     if self._slot:self.slot(vs.substitute(self._slot))
-        #     if self._url: self.url(vs.substitute(self._url))
-        #     if self._header: self.headers(vs.substitute(self._header))
-        #     if self._params:self.params(vs.substitute(self._params))
-        #     if self._data:self.data(vs.substitute(self._data))
+                substituted_var = self.variable_substitute(self.get_slot_substituted_variable(var))
+                getattr(self, key)(substituted_var)
 
     def variable_substitute(self, variable):
         from variables import Variables
@@ -188,7 +192,6 @@ class Core(Fixture):
             vs = Variables(self._last_response.body)
             return vs.substitute(variable)
 
-    # inspect response content
     def compare(self, ob1, ob2, validator):
         """
         :param ob1:expect result

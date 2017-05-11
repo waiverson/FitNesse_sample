@@ -7,17 +7,67 @@ PATH = os.path.dirname(os.path.abspath(__file__))
 sys.path.append('%s/../core' % PATH)
 from swarm.core.Core import *
 
-class CompareTest(unittest.TestCase):
+class CoreTest(unittest.TestCase):
 
     expect = {"status": 0,"result": [{"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
                                              {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
 
-    actual = {"status": 0,"result": [{"first_login": False,"is_active": True,"user_type": 1,"token": "%slot%","orgid": 74,"id": 170},
+    def test_get_slot_substituted_variable(self):
+        actual = {"status": 0,"result": [{"first_login": False,"is_active": True,"user_type": 1,"token": "%slot%","orgid": 74,"id": 170},
                                              {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
-
-    def test_slot_substitute(self):
         core = Core()
         core.slot('8LvAb5xK1t_170')
-        core.headers(self.actual)
-        core.slot_substitute(core._header)
+        core.headers(actual)
+        core.get_slot_substituted_variable(core._header)
         self.assertEqual(self.expect, core._header)
+
+    def test_get_slot_substituted_variable_of_boolean(self):
+        actual = {"status": 0,"result": [{"first_login": "%slot%","is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
+                                             {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
+        core = Core()
+        core.slot(False)
+        core.headers(actual)
+        core.get_slot_substituted_variable(core._header)
+        self.assertEqual(self.expect, core._header)
+
+    def test_variable_substitute(self):
+        core = Core()
+        core.last_response(RestResponse(self.expect))
+        id_name = '%$..result[@.orgid is 75].token[0]%'
+        variables = {'name':{'id_name':(id_name,)}}
+        self.assertEqual({'name':{'id_name':('8LvAb5xK1t_171',)}}, core.variable_substitute(variables))
+
+    def test_substitute_of_headers(self):
+        actual = {"status": 0,"result": [{"first_login": "%slot%","is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
+                                             {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
+        core = Core()
+        core.slot(False)
+        core.headers(actual)
+        core.last_response(RestResponse(self.expect))
+        core.substitute()
+        self.assertEqual(self.expect, core._header)
+
+    def test_substitute_of_data(self):
+        actual = {"status": 0,"result": [{"first_login": "%slot%","is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
+                                             {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
+        core = Core()
+        core.last_response(RestResponse(self.expect))
+        id_name = '%$..result[@.orgid is 75].token[0]%'
+        core.data({'name':{'id_name':(id_name,)}})
+        core.substitute()
+        self.assertEqual({'name':{'id_name':('8LvAb5xK1t_171',)}}, core._data)
+
+    def test_substitute_of_header_params_data(self):
+        actual = {"status": 0,"result": [{"first_login": "%slot%","is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
+                                             {"first_login": False,"is_active": True,"user_type": 1,"token": "8LvAb5xK1t_171","orgid": 75,"id": 171}]}
+        core = Core()
+        core.slot(False)
+        core.headers(actual)
+        core.params(actual)
+        core.last_response(RestResponse(self.expect))
+        id_name = '%$..result[@.orgid is 75].token[0]%'
+        core.data({'name':{'id_name':(id_name,)}})
+        core.substitute()
+        self.assertEqual(self.expect, core._header)
+        self.assertEqual(self.expect, core._params)
+        self.assertEqual({'name':{'id_name':('8LvAb5xK1t_171',)}}, core._data)

@@ -30,7 +30,7 @@ class Variables(object):
 
     def substitute(self, variable):
         variable = byteify(variable)
-        return self.get_substituted_variable(variable) if variable else  None
+        return self.get_substituted_variable(variable) if variable else None
 
     def path_find(self, expr, replacement):
         if '$' in expr:
@@ -88,9 +88,10 @@ class Variables(object):
             return [self.get_substituted_variable(v) for v in variable]
         elif isinstance(variable, tuple) and variable:
             return tuple([self.get_substituted_variable(v) for v in variable])
-        else:
-            if isinstance(variable, str):
+        elif isinstance(variable, str):
                 return self.substitute_for_path(variable)
+        else:
+            return variable
 
     def check(self, text):
         if isinstance(text, str) and "%" in text:
