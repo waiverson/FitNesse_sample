@@ -45,6 +45,10 @@ class VariablesTest(unittest.TestCase):
         variables = 'SESSION-TOKEN:%result[0]@token%'
         self.assertEqual('SESSION-TOKEN:8LvAb5xK1t_170', Variables(replacement).substitute(variables))
 
+    def test_substitute_for_str_by_dsl_2(self):
+        variables = '%result[0]@is_active%'
+        self.assertEqual(True, Variables(replacement).substitute(variables))
+
     def test_substitute_for_str_by_object_path(self):
         variables = 'SESSION-TOKEN:%$..result[@.orgid is 75].token[0]%'
         self.assertEqual('SESSION-TOKEN:8LvAb5xK1t_171', Variables(replacement).substitute(variables))
@@ -82,6 +86,30 @@ class VariablesTest(unittest.TestCase):
         name = '%$.result.total%'
         variables = {'predicted':path, 'name':name}
         self.assertEqual({'predicted':[20.0, 20.0, 20.0, 20.0, 20.0, 20.0], 'name':40}, Variables(test_json).substitute(variables))
+
+    def test_substitute_for_str_by_object_path_specific_element_5(self):
+        path = '%$.result.list[@.name is "SATA 1"].predicted[0]%'
+        id_name = '%$.result.total%'
+        variables = {'predicted':path, 'name':{'id_name':id_name}}
+        self.assertEqual({'predicted':[20.0, 20.0, 20.0, 20.0, 20.0, 20.0], 'name':{'id_name':40}}, Variables(test_json).substitute(variables))
+
+    def test_substitute_for_str_by_object_path_specific_element_6(self):
+        path = '%$.result.list[@.name is "SATA 1"].predicted[0]%'
+        id_name = '%$.result.total%'
+        variables = {'predicted':path, 'name':{'id_name':[id_name,]}}
+        self.assertEqual({'predicted':[20.0, 20.0, 20.0, 20.0, 20.0, 20.0], 'name':{'id_name':[40]}}, Variables(test_json).substitute(variables))
+
+    def test_substitute_for_str_by_object_path_specific_element_7(self):
+        path = '%$.result.list[@.name is "SATA 1"].predicted[0]%'
+        id_name = '%$.result.total%'
+        variables = {'predicted':path, 'name':{'id_name':(id_name,)}}
+        self.assertEqual({'predicted':[20.0, 20.0, 20.0, 20.0, 20.0, 20.0], 'name':{'id_name':(40,)}}, Variables(test_json).substitute(variables))
+
+    def test_get_substitued_variable(self):
+        path = '%$.result.list[@.name is "SATA 1"].predicted[0]%'
+        id_name = '%$.result.total%'
+        variables = {'predicted':path, 'name':[{'id_name': [id_name,path]},]}
+        self.assertEqual({'predicted':[20.0, 20.0, 20.0, 20.0, 20.0, 20.0], 'name':[{'id_name':[40,[20.0, 20.0, 20.0, 20.0, 20.0, 20.0]]},]}, Variables(test_json).substitute(variables))
 
 if __name__ == '__main__':
 
