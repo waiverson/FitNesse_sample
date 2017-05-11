@@ -71,3 +71,11 @@ class CoreTest(unittest.TestCase):
         self.assertEqual(self.expect, core._header)
         self.assertEqual(self.expect, core._params)
         self.assertEqual({'name':{'id_name':('8LvAb5xK1t_171',)}}, core._data)
+
+    def test_compare_of_assert_mode(self):
+        #to do
+        pass
+
+    def test_get(self):
+        #to do
+        pass
