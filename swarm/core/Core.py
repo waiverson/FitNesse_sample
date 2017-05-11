@@ -180,7 +180,7 @@ class Core(Fixture):
             return get_slot(variable) if isinstance(variable, str) else variable
 
     def substitute(self):
-    # 替换fitnesse输入的wrapper变量
+    # 替换url,header,params,data中包含的wrapper变量
         for key, var in self._set_request_field_func.iteritems():
             if var:
                 substituted_var = self.variable_substitute(self.get_slot_substituted_variable(var))
