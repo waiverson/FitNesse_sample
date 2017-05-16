@@ -74,7 +74,7 @@ class Core(Fixture):
 
     _typeDict["validator"] = "String"
     def validator(self, s):
-    # 设置校验器类型：OBJECT | DICT | JSON_SCHEMA | JSON
+    # 设置校验器类型：OBJECT | JSON_SCHEMA | ASSERT
         self._validator = s
 
     _typeDict["wait_time"] = "String"
