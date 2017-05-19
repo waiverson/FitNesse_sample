@@ -10,9 +10,15 @@ from variables import Variables
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+
 class Core(Fixture):
 
     _typeDict = {}
+
+    # case间传递需要的全局定义
+    g_header = {}
+    g_slot = None
+    g_last_resp = ""
 
     def __init__(self):
         Fixture.__init__(self)
@@ -24,30 +30,31 @@ class Core(Fixture):
         self._diff_by = ""
         self._diff_result = ""
         self._actual_result = ""
-        self._last_response = ""
         self._validator = ""
         self._wait_time = ""
         self._slot = None
-        self._set_request_field_func = {'url': self._url,
-                                        'headers': self._header,
-                                        'params': self._params,
-                                        'data': self._data}
 
     _typeDict["url"] = "String"
     def url(self, s):
-        self._url = s
+        if s:
+            self._url = self.substitute_expr(str(s))
 
     _typeDict["headers"] = "Dict"
     def headers(self, s):
-        self._header.update(dict(s))
+        if s:
+            real_v = self.substitute_expr(dict(s))
+            self._header.update(real_v)
+            Core.g_header.update(real_v)
 
     _typeDict["params"] = "Dict"
     def params(self, s):
-        self._params.update(dict(s))
+        if s:
+            self._params.update(self.substitute_expr(dict(s)))
 
     _typeDict["data"] = "Dict"
     def data(self, s):
-        self._data.update(dict(s))
+        if s:
+            self._data.update(self.substitute_expr(dict(s)))
 
     _typeDict["expect_result"] = "Dict"
     def expect_result(self, s):
@@ -70,7 +77,7 @@ class Core(Fixture):
     _typeDict["last_response"] = "Default"
     def last_response(self, s):
     # 提供将调用完的结果返回到fitnesse（必要时）
-        self._last_response = s
+        Core.g_last_resp = s
 
     _typeDict["validator"] = "String"
     def validator(self, s):
@@ -85,12 +92,17 @@ class Core(Fixture):
     _typeDict["slot"] = "String"
     def slot(self, s):
     # 将某值缓存起来，以便后续接口直接使用
-        self._slot = s
+        Core.g_slot = self.substitute_expr(s)
+
 
     _typeDict["debug"] = "String"
     def debug(self):
     #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
-        return str(self._url)
+        return "url:{url}\nheader:{header}\nparameter:{params}\nbody:{data}\nslot:{slot}".format(url=self._url,
+                                                               header=str(self._header or Core.g_header),
+                                                               params = str(self._params),
+                                                               data = str(self._data),
+                                                               slot = str(Core.g_slot))
 
     def clean_last_quary_condition(self):
         self._params.clear()
@@ -109,7 +121,6 @@ class Core(Fixture):
 
     def setup(self):
         self.clean_last_result()
-        self.substitute()
 
     def tearDown(self, resp):
         try:
@@ -126,44 +137,35 @@ class Core(Fixture):
     _typeDict["get"] = "Default"
     def get(self):
         self.setup()
-        resp = requests.get(self._url, params=self._params, headers=self._header)
+        resp = requests.get(self._url, params=self._params, headers=self._header or Core.g_header)
         self.tearDown(resp)
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
     #默认body为dict格式
         self.setup()
-        resp = requests.post(self._url, params=self._params, headers=self._header, data=self._data)
+        resp = requests.post(self._url, params=self._params, headers=self._header or Core.g_header, data=self._data)
         self.tearDown(resp)
 
     _typeDict["post"] = "Default"
     def post(self):
     #默认body为json格式
         self.setup()
-        resp = requests.post(self._url, params=self._params, headers=self._header, data=json.dumps(self._data))
+        resp = requests.post(self._url, params=self._params, headers=self._header or Core.g_header, data=json.dumps(self._data))
         self.tearDown(resp)
 
     def set_last_response(self,body):
         self.last_response(RestResponse(body))
 
-    def slot_substitute_stub(self):
-    #缓存值替换
-        if self._slot:
-            if self._url and '%slot%' in self._url:
-                self._url.replace("%slot%", self._slot)
-            for query_param in [x for x in [self._header, self._params, self._data] if x and '%slot%' in x.values()]:
-                slot_key = query_param.keys()[query_param.values().index('%slot%')]
-                query_param[slot_key] = self._slot
-
     def get_slot_substituted_variable(self, variable):
 
         def get_slot(var):
-            if self._slot is None:
+            if Core.g_slot is None:
                 return var
             if var == '%slot%':
-                return self._slot
+                return Core.g_slot
             elif '%slot%' in var:
-                return var.replace("%slot%", str(self._slot))
+                return var.replace("%slot%", str(Core.g_slot))
             else:
                 return var
 
@@ -179,18 +181,17 @@ class Core(Fixture):
         else:
             return get_slot(variable) if isinstance(variable, str) else variable
 
-    def substitute(self):
-    # 替换url,header,params,data中包含的wrapper变量
-        for key, var in self._set_request_field_func.iteritems():
-            if var:
-                substituted_var = self.variable_substitute(self.get_slot_substituted_variable(var))
-                getattr(self, key)(substituted_var)
-
     def variable_substitute(self, variable):
         from variables import Variables
-        if self._last_response:
-            vs = Variables(self._last_response.body)
+        if Core.g_last_resp:
+            vs = Variables(Core.g_last_resp.body)
             return vs.substitute(variable)
+        return variable
+
+    def substitute_expr(self, expr):
+        return self.variable_substitute(self.get_slot_substituted_variable(expr))
+
+
 
     def compare(self, ob1, ob2, validator):
         """

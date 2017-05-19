@@ -67,7 +67,7 @@ class VariablesTest(unittest.TestCase):
         self.assertEqual({'SESSION-TOKEN':'8LvAb5xK1t_171'}, Variables(replacement).substitute(variables))
 
     def test_get_substitued_variable_of_boolean(self):
-        path = '%$..result[@.orgid is 75].first_login[0]%'
+        path = '%$.result[@.orgid is 75].first_login[0]%'
         variables = {'SESSION-TOKEN':path,'test':True}
         self.assertEqual({'SESSION-TOKEN':False,'test':True}, Variables(replacement).substitute(variables))
 
@@ -82,7 +82,7 @@ class VariablesTest(unittest.TestCase):
         self.assertEqual({'predicted':[20.0, 20.0, 20.0, 20.0, 20.0, 20.0]}, Variables(test_json).substitute(variables))
 
     def test_get_substitued_variable_by_object_path_specific_elements_3(self):
-        id = '%$..result[@.orgid is 75].id[0]%'
+        id = '%$.result[@.orgid is 75].id[0]%'
         variables = {'id':id}
         self.assertEqual({'id':171}, Variables(replacement).substitute(variables))
 
