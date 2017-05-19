@@ -41,7 +41,7 @@ class VariablesTest(unittest.TestCase):
         variables = {'SESSION-TOKEN':'%result[0]@token%'}
         self.assertEqual({'SESSION-TOKEN':'8LvAb5xK1t_170'}, Variables(replacement).substitute(variables))
 
-    def test_get_substitued_variable_by_dsl_negtive(self):
+    def test_get_substitued_variable_by_dsl_multiple(self):
         result = {
                   "errcode": 0,
                   "result": {
