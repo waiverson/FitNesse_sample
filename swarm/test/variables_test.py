@@ -41,6 +41,33 @@ class VariablesTest(unittest.TestCase):
         variables = {'SESSION-TOKEN':'%result[0]@token%'}
         self.assertEqual({'SESSION-TOKEN':'8LvAb5xK1t_170'}, Variables(replacement).substitute(variables))
 
+    def test_get_substitued_variable_by_dsl_negtive(self):
+        result = {
+                  "errcode": 0,
+                  "result": {
+                    "list": [
+                      {
+                        "desc": "默认管理员",
+                        "id": 0,
+                        "name": "管理员"
+                      },
+                      {
+                        "desc": "描述信息",
+                        "id": 5098,
+                        "name": "1"
+                      },
+                      {
+                        "desc": "描述信息",
+                        "id": 5097,
+                        "name": "角色名称过长00000"
+                      }
+                    ]
+                  },
+                  "status": 0
+                }
+        variables = {'ids':'%result@list[-1]@id%,%result@list[-2]@id%'}
+        self.assertEqual({'ids':'5097,5098'}, Variables(result).substitute(variables))
+
     def test_get_substitued_variable_by_dsl(self):
         variables = 'SESSION-TOKEN:%result[0]@token%'
         self.assertEqual('SESSION-TOKEN:8LvAb5xK1t_170', Variables(replacement).substitute(variables))
