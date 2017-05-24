@@ -29,8 +29,7 @@ class Variables(object):
             return input
 
     def substitute(self, variable):
-        variable = self.byteify(variable)
-        return self.get_substituted_variable(variable) if variable else None
+        return self.get_substituted_variable(self.byteify(variable))
 
     def path_find(self, expr, replacement):
         if '$' in expr:
