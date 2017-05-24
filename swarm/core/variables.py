@@ -7,17 +7,6 @@ from collections import Iterable
 from json2obejct import recursive_json_loads
 import objectpath
 
-def byteify(input):
-    # 转换unicode输入为str输出
-    if isinstance(input, dict):
-        return {byteify(key):byteify(value) for key,value in input.iteritems()}
-    elif isinstance(input, list):
-        return [byteify(element) for element in input]
-    elif isinstance(input, unicode):
-        return input.encode('utf-8')
-    else:
-        return input
-
 class Variables(object):
 
     VARIABLES_PATTERN = re.compile("\%(.+?)\%")
@@ -26,10 +15,21 @@ class Variables(object):
         if not resp_body:
             self.replacement = None
         else:
-            self.replacement = byteify(resp_body)
+            self.replacement = self.byteify(resp_body)
+
+    def byteify(self, input):
+        # 转换unicode输入为str输出
+        if isinstance(input, dict):
+            return {self.byteify(key):self.byteify(value) for key,value in input.iteritems()}
+        elif isinstance(input, list):
+            return [self.byteify(element) for element in input]
+        elif isinstance(input, unicode):
+            return input.encode('utf-8')
+        else:
+            return input
 
     def substitute(self, variable):
-        variable = byteify(variable)
+        variable = self.byteify(variable)
         return self.get_substituted_variable(variable) if variable else None
 
     def path_find(self, expr, replacement):
