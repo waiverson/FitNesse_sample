@@ -32,7 +32,6 @@ class Core(Fixture):
         self._actual_result = ""
         self._validator = ""
         self._wait_time = ""
-        self._slot = None
 
     _typeDict["url"] = "String"
     def url(self, s):
@@ -181,12 +180,12 @@ class Core(Fixture):
         else:
             return get_slot(variable) if isinstance(variable, str) else variable
 
-    def variable_substitute(self, variable):
+    def variable_substitute(self, expr):
         from variables import Variables
-        if Core.g_last_resp:
+        if Core.g_last_resp and expr:
             vs = Variables(Core.g_last_resp.body)
-            return vs.substitute(variable)
-        return variable
+            return vs.substitute(expr)
+        return expr
 
     def substitute_expr(self, expr):
         return self.variable_substitute(self.get_slot_substituted_variable(expr))
