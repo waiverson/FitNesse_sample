@@ -93,7 +93,6 @@ class Core(Fixture):
     # 将某值缓存起来，以便后续接口直接使用
         Core.g_slot = self.substitute_expr(s)
 
-
     _typeDict["debug"] = "String"
     def debug(self):
     #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
@@ -189,8 +188,6 @@ class Core(Fixture):
 
     def substitute_expr(self, expr):
         return self.variable_substitute(self.get_slot_substituted_variable(expr))
-
-
 
     def compare(self, ob1, ob2, validator):
         """
