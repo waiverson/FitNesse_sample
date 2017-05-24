@@ -65,9 +65,9 @@ class Variables(object):
 
     def substitute_for_path(self, variable):
         # 替换variable中的“路径查找表达式”
-        if self.check(variable) and self.replacement:
+        if self._is_expr(variable) and self.replacement:
             match_expr = Variables.VARIABLES_PATTERN.findall(variable)
-            if len(match_expr) > 1 or not self.is_pure_expr(variable):
+            if len(match_expr) > 1 or not self._is_pure_expr(variable):
                 for expr in match_expr:
                     v = self.path_find(expr, self.replacement)
                     variable = variable.replace("%", "")
@@ -92,11 +92,11 @@ class Variables(object):
         else:
             return variable
 
-    def check(self, text):
+    def _is_expr(self, text):
         if isinstance(text, str) and "%" in text:
             return True
         else:
             False
 
-    def is_pure_expr(self, expr):
+    def _is_pure_expr(self, expr):
         return expr.startswith('%') and expr.endswith('%')
