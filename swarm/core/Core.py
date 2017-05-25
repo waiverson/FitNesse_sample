@@ -5,6 +5,7 @@ __author__ = 'xyc'
 from fit.Fixture import Fixture
 import requests, json, sys, time
 from restdata import RestResponse
+from conversion import Conversion
 from variables import Variables
 
 reload(sys)
@@ -16,9 +17,13 @@ class Core(Fixture):
     _typeDict = {}
 
     # case间传递需要的全局定义
+    g_session = requests.session()
     g_header = {}
     g_slot = None
     g_last_resp = ""
+    connect_timeout = None
+    read_time = None
+    g_timeout = (connect_timeout, read_time)
 
     def __init__(self):
         Fixture.__init__(self)
@@ -36,24 +41,25 @@ class Core(Fixture):
     _typeDict["url"] = "String"
     def url(self, s):
         if s:
-            self._url = self.substitute_expr(str(s))
+            self._url = Core.realistic(str(s))
 
     _typeDict["headers"] = "Dict"
     def headers(self, s):
         if s:
-            real_v = self.substitute_expr(dict(s))
+            real_v = Core.realistic(dict(s))
             self._header.update(real_v)
+            Core.g_session.headers.update(real_v)
             Core.g_header.update(real_v)
 
     _typeDict["params"] = "Dict"
     def params(self, s):
         if s:
-            self._params.update(self.substitute_expr(dict(s)))
+            self._params.update(Core.realistic(dict(s)))
 
     _typeDict["data"] = "Dict"
     def data(self, s):
         if s:
-            self._data.update(self.substitute_expr(dict(s)))
+            self._data.update(Core.realistic(dict(s)))
 
     _typeDict["expect_result"] = "Dict"
     def expect_result(self, s):
@@ -91,7 +97,7 @@ class Core(Fixture):
     _typeDict["slot"] = "String"
     def slot(self, s):
     # 将某值缓存起来，以便后续接口直接使用
-        Core.g_slot = self.substitute_expr(s)
+        Core.g_slot = Core.realistic(s)
 
     _typeDict["debug"] = "String"
     def debug(self):
@@ -101,6 +107,9 @@ class Core(Fixture):
                                                                params = str(self._params),
                                                                data = str(self._data),
                                                                slot = str(Core.g_slot))
+
+    def set_last_response(self, resp_content):
+        self.last_response(RestResponse(resp_content))
 
     def clean_last_quary_condition(self):
         self._params.clear()
@@ -131,63 +140,45 @@ class Core(Fixture):
             self.clean_last_quary_condition()
         except:
             self._actual_result = resp.text.decode("unicode_escape")
+        finally:
+            resp.close()
 
     _typeDict["get"] = "Default"
     def get(self):
         self.setup()
-        resp = requests.get(self._url, params=self._params, headers=self._header or Core.g_header)
+        resp = Core.send_http_request(session=Core.g_session, method="GET", url=self._url,
+                                      params=self._params, timeout=Core.g_timeout)
         self.tearDown(resp)
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
-    #默认body为dict格式
         self.setup()
-        resp = requests.post(self._url, params=self._params, headers=self._header or Core.g_header, data=self._data)
+        resp = Core.send_http_request(session=Core.g_session, method="POST", url=self._url,
+                                      params=self._params, data=self._data, timeout=Core.g_timeout)
         self.tearDown(resp)
 
     _typeDict["post"] = "Default"
     def post(self):
-    #默认body为json格式
         self.setup()
-        resp = requests.post(self._url, params=self._params, headers=self._header or Core.g_header, data=json.dumps(self._data))
+        data = json.dumps(self._data)
+        resp = Core.send_http_request(session=Core.g_session, method="POST", url=self._url,
+                                      params=self._params, data=data, timeout=Core.g_timeout)
         self.tearDown(resp)
 
-    def set_last_response(self,body):
-        self.last_response(RestResponse(body))
+    @classmethod
+    def send_http_request(cls, session=None, method="GET", url=None, headers={},
+                          params=None, data=None, timeout=3):
+        if not session:
+            session = requests.session()
+            session.headers.update(headers)
+        req = requests.Request(method.upper(), url=url, params=params, data=data)
+        prepped = session.prepare_request(req)
+        return session.send(prepped, timeout=timeout)
 
-    def get_slot_substituted_variable(self, variable):
-
-        def get_slot(var):
-            if Core.g_slot is None:
-                return var
-            if var == '%slot%':
-                return Core.g_slot
-            elif '%slot%' in var:
-                return var.replace("%slot%", str(Core.g_slot))
-            else:
-                return var
-
-        if isinstance(variable, dict) and variable:
-            for k in variable.keys():
-                substituted_v = self.get_slot_substituted_variable(variable[k])
-                variable.update({k: substituted_v})
-            return variable
-        elif isinstance(variable, list) and variable:
-            return [self.get_slot_substituted_variable(v) for v in variable]
-        elif isinstance(variable, tuple) and variable:
-            return tuple([self.get_slot_substituted_variable(v) for v in variable])
-        else:
-            return get_slot(variable) if isinstance(variable, str) else variable
-
-    def variable_substitute(self, expr):
-        from variables import Variables
-        if Core.g_last_resp and expr:
-            vs = Variables(Core.g_last_resp.body)
-            return vs.substitute(expr)
-        return expr
-
-    def substitute_expr(self, expr):
-        return self.variable_substitute(self.get_slot_substituted_variable(expr))
+    @classmethod
+    def realistic(cls, variable):
+        return Conversion.with_expr(Conversion.with_slot(variable, body=cls.g_slot),
+                                    body=cls.g_last_resp.body if cls.g_last_resp else None)
 
     def compare(self, ob1, ob2, validator):
         """

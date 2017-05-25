@@ -18,7 +18,6 @@ class CoreTest(unittest.TestCase):
         core = Core()
         core.slot('8LvAb5xK1t_170')
         core.headers(actual)
-        core.get_slot_substituted_variable(core._header)
         self.assertEqual(self.expect, core._header)
 
     def test_get_slot_substituted_variable_of_boolean(self):
@@ -27,7 +26,6 @@ class CoreTest(unittest.TestCase):
         core = Core()
         core.slot(False)
         core.headers(actual)
-        core.get_slot_substituted_variable(core._header)
         self.assertEqual(self.expect, core._header)
 
     def test_variable_substitute(self):
@@ -35,7 +33,7 @@ class CoreTest(unittest.TestCase):
         core.last_response(RestResponse(self.expect))
         id_name = '%$..result[@.orgid is 75].token[0]%'
         variables = {'name':{'id_name':(id_name,)}}
-        self.assertEqual({'name':{'id_name':('8LvAb5xK1t_171',)}}, core.variable_substitute(variables))
+        self.assertEqual({'name':{'id_name':('8LvAb5xK1t_171',)}}, core.realistic(variables))
 
     def test_substitute_of_headers(self):
         actual = {"status": 0,"result": [{"first_login": "%slot%","is_active": True,"user_type": 1,"token": "8LvAb5xK1t_170","orgid": 74,"id": 170},
