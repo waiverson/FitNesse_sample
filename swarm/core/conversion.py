@@ -1,7 +1,7 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-
+from variables import Variables
 class Conversion(object):
 
     @classmethod
@@ -32,7 +32,6 @@ class Conversion(object):
     @classmethod
     def with_expr(cls, expr, body=None):
         # 转换变量expr中的 定位表达式
-        from variables import Variables
         if body and expr:
             vs = Variables(body)
             return vs.substitute(expr)
