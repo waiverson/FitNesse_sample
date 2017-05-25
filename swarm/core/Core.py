@@ -6,7 +6,6 @@ from fit.Fixture import Fixture
 import requests, json, sys, time
 from restdata import RestResponse
 from conversion import Conversion
-from variables import Variables
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -85,7 +84,7 @@ class Core(Fixture):
         Core.g_last_resp = s
 
     _typeDict["validator"] = "String"
-    def validator(self, s):
+    def validator(self, s="JSON_SCHEMA"):
     # 设置校验器类型：OBJECT | JSON_SCHEMA | ASSERT
         self._validator = s
 
