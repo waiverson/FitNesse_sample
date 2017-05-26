@@ -128,7 +128,7 @@ class Core(Fixture):
     def setup(self):
         self.clean_last_result()
 
-    def tearDown(self, resp):
+    def teardown(self, resp):
         try:
             rc = json.loads(resp.content)
             self.set_last_response(rc)
@@ -147,14 +147,14 @@ class Core(Fixture):
         self.setup()
         resp = Core.send_http_request(session=Core.g_session, method="GET", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.tearDown(resp)
+        self.teardown(resp)
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
         self.setup()
         resp = Core.send_http_request(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=self._data, timeout=Core.g_timeout)
-        self.tearDown(resp)
+        self.teardown(resp)
 
     _typeDict["post"] = "Default"
     def post(self):
@@ -162,7 +162,7 @@ class Core(Fixture):
         data = json.dumps(self._data)
         resp = Core.send_http_request(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=data, timeout=Core.g_timeout)
-        self.tearDown(resp)
+        self.teardown(resp)
 
     @classmethod
     def send_http_request(cls, session=None, method="GET", url=None, headers={},
