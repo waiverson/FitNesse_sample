@@ -176,13 +176,13 @@ class Core(Fixture):
                           params=None, data=None, timeout=None):
         self.setup()
         http_request = DefaultHttpRequest().with_uri(url) \
-                                   .with_method(method) \
-                                   .with_headers(headers) \
-                                   .with_params(params) \
-                                   .with_data(data) \
-                                   .with_session(session) \
-                                   .with_timeout(timeout) \
-                                   .new_request()
+                                           .with_method(method) \
+                                           .with_headers(headers) \
+                                           .with_params(params) \
+                                           .with_data(data) \
+                                           .with_session(session) \
+                                           .with_timeout(timeout) \
+                                           .new_request()
         resp = self.get_http_response(http_request)
         self.teardown(resp)
 
