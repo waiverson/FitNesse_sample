@@ -79,6 +79,10 @@ class CoreTest(unittest.TestCase):
         #to do
         pass
 
-    def test_get(self):
-        #to do
-        pass
+    def test_do_method(self):
+        uri = "http://172.20.0.223/lae/auth/login"
+        data = {'user':'2215649033@qq.com','password':'123456@a'}
+        method = "POST"
+        var = Core().do_method(session=None, method=method, url=uri, headers={},
+                          params=None, data=data, timeout=None)
+        self.assertEqual('PASS', var)

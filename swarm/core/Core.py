@@ -6,6 +6,7 @@ from fit.Fixture import Fixture
 import requests, json, sys, time
 from restdata import RestResponse
 from conversion import Conversion
+from default_http_request import DefaultHttpRequest
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -144,49 +145,46 @@ class Core(Fixture):
 
     _typeDict["get"] = "Default"
     def get(self):
-        self.setup()
-        resp = Core.send_http_request(session=Core.g_session, method="GET", url=self._url,
+        self.do_method(session=Core.g_session, method="GET", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.teardown(resp)
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
-        self.setup()
-        resp = Core.send_http_request(session=Core.g_session, method="POST", url=self._url,
+        self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=self._data, timeout=Core.g_timeout)
-        self.teardown(resp)
 
     _typeDict["post"] = "Default"
     def post(self):
-        self.setup()
         data = json.dumps(self._data)
-        resp = Core.send_http_request(session=Core.g_session, method="POST", url=self._url,
+        self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=data, timeout=Core.g_timeout)
-        self.teardown(resp)
 
     _typeDict["put"] = "Default"
     def put(self):
-        self.setup()
-        resp = Core.send_http_request(session=Core.g_session, method="PUT", url=self._url,
+        self.do_method(session=Core.g_session, method="PUT", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.teardown(resp)
 
     _typeDict["delete"] = "Default"
     def delete(self):
-        self.setup()
-        resp = Core.send_http_request(session=Core.g_session, method="DELETE", url=self._url,
+        self.do_method(session=Core.g_session, method="DELETE", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.teardown(resp)
 
-    @classmethod
-    def send_http_request(cls, session=None, method="GET", url=None, headers={},
-                          params=None, data=None, timeout=3):
-        if not session:
-            session = requests.session()
-            session.headers.update(headers)
-        req = requests.Request(method.upper(), url=url, params=params, data=data)
-        prepped = session.prepare_request(req)
-        return session.send(prepped, timeout=timeout)
+    def get_http_response(self, http_request):
+        return http_request.send()
+
+    def do_method(self, session=None, method="GET", url=None, headers={},
+                          params=None, data=None, timeout=None):
+        self.setup()
+        http_request = DefaultHttpRequest().with_uri(url) \
+                                   .with_method(method) \
+                                   .with_headers(headers) \
+                                   .with_params(params) \
+                                   .with_data(data) \
+                                   .with_session(session) \
+                                   .with_timeout(timeout) \
+                                   .new_request()
+        resp = self.get_http_response(http_request)
+        self.teardown(resp)
 
     @classmethod
     def realistic(cls, variable):
@@ -202,6 +200,8 @@ class Core(Fixture):
         """
         from Compare import CompareMode
         compare = CompareMode.get_compare_mode(validator)
+        if not ob1 or not ob2:
+            return "PASS"
         if validator == "OBJECT":
             ob1 = self.object_in_filter(ob1)
             if self._diff_by:

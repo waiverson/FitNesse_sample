@@ -67,6 +67,9 @@ class DefaultHttpRequest(object):
         self._timeout = timeout
         return self
 
+    def new_request(self):
+        return self
+
     def send(self):
         self._session.headers.update(self._headers)
         req = requests.Request(self._method.upper(), url=self._uri, params=self._params, data=self._data)
