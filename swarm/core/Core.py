@@ -164,6 +164,20 @@ class Core(Fixture):
                                       params=self._params, data=data, timeout=Core.g_timeout)
         self.teardown(resp)
 
+    _typeDict["put"] = "Default"
+    def put(self):
+        self.setup()
+        resp = Core.send_http_request(session=Core.g_session, method="PUT", url=self._url,
+                                      params=self._params, timeout=Core.g_timeout)
+        self.teardown(resp)
+
+    _typeDict["delete"] = "Default"
+    def delete(self):
+        self.setup()
+        resp = Core.send_http_request(session=Core.g_session, method="DELETE", url=self._url,
+                                      params=self._params, timeout=Core.g_timeout)
+        self.teardown(resp)
+
     @classmethod
     def send_http_request(cls, session=None, method="GET", url=None, headers={},
                           params=None, data=None, timeout=3):
