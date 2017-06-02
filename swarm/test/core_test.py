@@ -83,6 +83,5 @@ class CoreTest(unittest.TestCase):
         uri = "http://172.20.0.223/lae/auth/login"
         data = {'user':'2215649033@qq.com','password':'123456@a'}
         method = "POST"
-        var = Core().do_method(session=None, method=method, url=uri, headers={},
-                          params=None, data=data, timeout=None)
-        self.assertEqual('PASS', var)
+        resp = Core().do_method(method=method, url=uri, data=data)
+        self.assertIn("token", resp.content)

@@ -129,52 +129,63 @@ class Core(Fixture):
     def setup(self):
         self.clean_last_result()
 
-    def teardown(self, resp):
-        try:
-            rc = json.loads(resp.content)
-            self.set_last_response(rc)
-            self._actual_result = resp.text.decode("unicode_escape")
-            self._diff_result = self.compare(self._expect_result, rc, self._validator)
-            if self._wait_time:
-                time.sleep(int(self._wait_time))
-            self.clean_last_quary_condition()
-        except:
-            self._actual_result = resp.text.decode("unicode_escape")
-        finally:
-            resp.close()
+    def teardown(self):
+        self.clean_last_quary_condition()
 
     _typeDict["get"] = "Default"
     def get(self):
-        self.do_method(session=Core.g_session, method="GET", url=self._url,
+        resp = self.do_method(session=Core.g_session, method="GET", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
+        self.exercise(self._expect_result, resp, self._diff_by)
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
-        self.do_method(session=Core.g_session, method="POST", url=self._url,
+        resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=self._data, timeout=Core.g_timeout)
+        self.exercise(self._expect_result, resp, self._diff_by)
 
     _typeDict["post"] = "Default"
     def post(self):
         data = json.dumps(self._data)
-        self.do_method(session=Core.g_session, method="POST", url=self._url,
+        resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=data, timeout=Core.g_timeout)
+        self.exercise(self._expect_result, resp, self._diff_by)
 
     _typeDict["put"] = "Default"
     def put(self):
-        self.do_method(session=Core.g_session, method="PUT", url=self._url,
+        resp = self.do_method(session=Core.g_session, method="PUT", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
+        self.exercise(self._expect_result, resp, self._diff_by)
 
     _typeDict["delete"] = "Default"
     def delete(self):
-        self.do_method(session=Core.g_session, method="DELETE", url=self._url,
+        resp = self.do_method(session=Core.g_session, method="DELETE", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
+        self.exercise(self._expect_result, resp, self._diff_by)
 
-    def get_http_response(self, http_request):
-        return http_request.send()
+    def exercise(self, expect, resp, verify_mode):
+        self.setup()
+        try:
+            rc = json.loads(resp.content)
+            self.set_last_response(rc)
+            actual = resp.text.decode("unicode_escape")
+        except:
+            actual = "Unexpected error: " + sys.exc_info()[0]
+        finally:
+            resp.close()
+        self._actual_result = actual
+        rs = self.verify(expect, actual, verify_mode)
+        self._diff_result = rs
+        if self._wait_time:
+            time.sleep(int(self._wait_time))
+        self.teardown()
+
+    def verify(self, expect, actual, mode):
+        rs = self.compare(expect, actual, mode)
+        return rs
 
     def do_method(self, session=None, method="GET", url=None, headers={},
                           params=None, data=None, timeout=None):
-        self.setup()
         http_request = DefaultHttpRequest().with_uri(url) \
                                            .with_method(method) \
                                            .with_headers(headers) \
@@ -183,8 +194,9 @@ class Core(Fixture):
                                            .with_session(session) \
                                            .with_timeout(timeout) \
                                            .new_request()
-        resp = self.get_http_response(http_request)
-        self.teardown(resp)
+
+        resp = http_request.send()
+        return resp
 
     @classmethod
     def realistic(cls, variable):
