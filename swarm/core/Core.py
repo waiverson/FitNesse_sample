@@ -7,6 +7,7 @@ import requests, json, sys, time,traceback
 from restdata import RestResponse
 from conversion import Conversion
 from default_http_request import DefaultHttpRequest
+from Compare import CompareMode
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -16,7 +17,7 @@ class Core(Fixture):
 
     _typeDict = {}
 
-    # case间传递需要的全局定义
+    # 用于fitnesse case间传递
     g_session = requests.session()
     g_header = {}
     g_slot = None
@@ -171,19 +172,25 @@ class Core(Fixture):
             response_v = resp.json()
             self.set_last_response(response_v)
             self._actual_result_for_dis = resp.text.decode("unicode_escape")
-        except:
-            self._actual_result_for_dis = "Unexpected error: " + traceback.format_exc()
+            rs = self.verify(expect, response_v, verify_mode)
+            self._diff_result = rs
+            if self._wait_time:
+                time.sleep(int(self._wait_time))
+        except ValueError:
+            self._actual_result_for_dis = "返回信息：\t{}\n异常信息：\n{}".format(resp.text, traceback.format_exc())
         finally:
             resp.close()
-        rs = self.verify(expect, response_v, verify_mode)
-        self._diff_result = rs
-        if self._wait_time:
-            time.sleep(int(self._wait_time))
-        self.teardown()
+            self.teardown()
 
     def verify(self, expect, actual, mode):
-        rs = self.compare(expect, actual, mode)
-        return rs
+        if mode.upper() == "OBJECT":
+            expect = self.bool_convert(expect)
+        rs = self.compare(expect, actual, mode, by=self._diff_by)
+        if isinstance(rs, dict):
+            rs.update({rs.keys()[0]: filter(self.null_convert, rs[rs.keys()[0]])})
+            if not rs.values()[0]:
+                return "PASS"
+        return "PASS" if not rs else str(rs)
 
     def do_method(self, session=None, method="GET", url=None, headers={},
                           params=None, data=None, timeout=None):
@@ -204,34 +211,14 @@ class Core(Fixture):
         return Conversion.with_expr(Conversion.with_slot(variable, body=cls.g_slot),
                                     body=cls.g_last_resp.body if cls.g_last_resp else None)
 
-    def compare(self, ob1, ob2, validator):
-        """
-        :param ob1:expect result
-        :param ob2: acutal result
-        :param validator: validator mode
-        :return:
-        """
-        from Compare import CompareMode
-        compare = CompareMode.get_compare_mode(validator)
-        if not ob1 or not ob2:
-            return "PASS"
-        if validator == "OBJECT":
-            ob1 = self.object_in_filter(ob1)
-            if self._diff_by:
-                result = compare.diff(ob1, ob2, self._diff_by)
-            else:
-                result = compare.diff(ob1, ob2)
-            result.update({result.keys()[0]:filter(self.object_out_filter, result[result.keys()[0]])})
-            for k, v in result.items():
-                if not v :
-                    return 'PASS'
-                else:
-                    return str(result)
-        else:
-            result = compare.diff(ob1, ob2)
-            return "PASS" if not result else str(result)
+    def compare(self, actual, expect, mode, by):
+        validator = CompareMode.get_compare_mode(mode)
+        if not actual or not expect:
+            return None
+        return validator.diff(actual, expect, by)
 
-    def object_in_filter(self, data):
+    def bool_convert(self, data):
+        #fitnesse不支持bool值,用str代替
         def type_handler(data):
             if isinstance(data, dict):
                 for k, v in data.items():
@@ -242,14 +229,14 @@ class Core(Fixture):
                 return data
         return type_handler(data)
 
-    def object_out_filter(self, kv):
+    def null_convert(self, data):
         # because fitnesse cell in table is not support null collection(dict,list,set,tuple),so use '%s' for placeholder .
         # so,'%s' should be ignore
-        def is_placeholder(kv):
+        def is_placeholder(data):
             """
             Takes {k, v} dict, returns True if it's a placeholder.
             """
-            for k, v in kv.items():
+            for k, v in data.items():
                 return not bool(
                     k == '%s'
                 )
