@@ -56,6 +56,9 @@ class DefaultHttpRequest(object):
         if not session:
             self._session = self.session_supplier()
             return self
+        else:
+            self._session = session
+            return self
 
     def session_supplier(self,):
             return requests.session()

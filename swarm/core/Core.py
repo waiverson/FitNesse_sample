@@ -3,7 +3,7 @@ __author__ = 'xyc'
 
 
 from fit.Fixture import Fixture
-import requests, json, sys, time
+import requests, json, sys, time,traceback
 from restdata import RestResponse
 from conversion import Conversion
 from default_http_request import DefaultHttpRequest
@@ -34,7 +34,7 @@ class Core(Fixture):
         self._expect_result = None
         self._diff_by = ""
         self._diff_result = ""
-        self._actual_result = ""
+        self._actual_result_for_dis = ""
         self._validator = ""
         self._wait_time = ""
 
@@ -76,8 +76,8 @@ class Core(Fixture):
 
     _typeDict["actual_result"] = "String"
     def actual_result(self):
-    #将比较完的结果返回到fitnesse
-        return self._actual_result
+    #将http response的结果返回到fitnesse显示
+        return self._actual_result_for_dis
 
     _typeDict["last_response"] = "Default"
     def last_response(self, s):
@@ -120,7 +120,7 @@ class Core(Fixture):
         self._diff_result = ""
 
     def clean_actual_result(self):
-        self._actual_result = ""
+        self._actual_result_for_dis = ""
 
     def clean_last_result(self):
         self.clean_diff_result()
@@ -136,45 +136,44 @@ class Core(Fixture):
     def get(self):
         resp = self.do_method(session=Core.g_session, method="GET", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.exercise(self._expect_result, resp, self._diff_by)
+        self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
         resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=self._data, timeout=Core.g_timeout)
-        self.exercise(self._expect_result, resp, self._diff_by)
+        self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["post"] = "Default"
     def post(self):
         data = json.dumps(self._data)
         resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=data, timeout=Core.g_timeout)
-        self.exercise(self._expect_result, resp, self._diff_by)
+        self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["put"] = "Default"
     def put(self):
         resp = self.do_method(session=Core.g_session, method="PUT", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.exercise(self._expect_result, resp, self._diff_by)
+        self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["delete"] = "Default"
     def delete(self):
         resp = self.do_method(session=Core.g_session, method="DELETE", url=self._url,
                                       params=self._params, timeout=Core.g_timeout)
-        self.exercise(self._expect_result, resp, self._diff_by)
+        self.exercise(self._expect_result, resp, self._validator)
 
     def exercise(self, expect, resp, verify_mode):
         self.setup()
         try:
-            rc = json.loads(resp.content)
-            self.set_last_response(rc)
-            actual = resp.text.decode("unicode_escape")
+            response_v = resp.json()
+            self.set_last_response(response_v)
+            self._actual_result_for_dis = resp.text.decode("unicode_escape")
         except:
-            actual = "Unexpected error: " + sys.exc_info()[0]
+            self._actual_result_for_dis = "Unexpected error: " + traceback.format_exc()
         finally:
             resp.close()
-        self._actual_result = actual
-        rs = self.verify(expect, actual, verify_mode)
+        rs = self.verify(expect, response_v, verify_mode)
         self._diff_result = rs
         if self._wait_time:
             time.sleep(int(self._wait_time))
@@ -191,8 +190,8 @@ class Core(Fixture):
                                            .with_headers(headers) \
                                            .with_params(params) \
                                            .with_data(data) \
-                                           .with_session(session) \
-                                           .with_timeout(timeout) \
+                                           .with_session(session=session) \
+                                           .with_timeout(timeout=timeout) \
                                            .new_request()
 
         resp = http_request.send()
