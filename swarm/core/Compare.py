@@ -17,7 +17,7 @@ class CompareMode(object):
         self.diff_result = {}
 
     @staticmethod
-    def get_compare_mode(mode):
+    def get_compare_mode(mode="JSON_SCHEMA"):
         if mode.upper() == CompareMode.OBJECT_MODE:
             return InstanceCompareMode()
         elif mode.upper() == CompareMode.JSON_SCHEMA_MODE:
@@ -25,7 +25,7 @@ class CompareMode(object):
         elif mode.upper() == CompareMode.ASSERT_MODE:
             return AssertCompareMode()
 
-    def diff(self):
+    def diff(self, expect, actual, by):
         pass
 
 
@@ -106,7 +106,7 @@ class JsonSchemaCompareMode(CompareMode):
     def __init__(self):
         pass
 
-    def diff(self, json_schema, instance):
+    def diff(self, json_schema, instance, by=None):
         """
         :param json_schema: json schema
         :param instance: json or dict
