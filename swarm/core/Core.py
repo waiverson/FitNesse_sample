@@ -140,12 +140,14 @@ class Core(Fixture):
 
     _typeDict["post_by_dict"] = "Default"
     def post_by_dict(self):
+        #传递表单形式的数据
         resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=self._data, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["post"] = "Default"
     def post(self):
+        #传递json形式的数据
         data = json.dumps(self._data)
         resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
                                       params=self._params, data=data, timeout=Core.g_timeout)
