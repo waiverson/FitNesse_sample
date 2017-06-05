@@ -109,30 +109,6 @@ class Core(Fixture):
                                                                data = str(self._data),
                                                                slot = str(Core.g_slot))
 
-    def set_last_response(self, resp_content):
-        self.last_response(RestResponse(resp_content))
-
-    def clean_last_quary_condition(self):
-        self._params.clear()
-        self._data.clear()
-        self._wait_time = None
-
-    def clean_diff_result(self):
-        self._diff_result = ""
-
-    def clean_actual_result(self):
-        self._actual_result_for_dis = ""
-
-    def clean_last_result(self):
-        self.clean_diff_result()
-        self.clean_actual_result()
-
-    def setup(self):
-        self.clean_last_result()
-
-    def teardown(self):
-        self.clean_last_quary_condition()
-
     _typeDict["get"] = "Default"
     def get(self):
         resp = self.do_method(session=Core.g_session, method="GET", url=self._url,
@@ -166,6 +142,12 @@ class Core(Fixture):
                                       params=self._params, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
+    def setup(self):
+        self.clean_last_result()
+
+    def teardown(self):
+        self.clean_last_quary_condition()
+
     def exercise(self, expect, resp, verify_mode):
         self.setup()
         try:
@@ -181,6 +163,24 @@ class Core(Fixture):
         finally:
             resp.close()
             self.teardown()
+
+    def set_last_response(self, resp_content):
+        self.last_response(RestResponse(resp_content))
+
+    def clean_last_quary_condition(self):
+        self._params.clear()
+        self._data.clear()
+        self._wait_time = None
+
+    def clean_diff_result(self):
+        self._diff_result = ""
+
+    def clean_actual_result(self):
+        self._actual_result_for_dis = ""
+
+    def clean_last_result(self):
+        self.clean_diff_result()
+        self.clean_actual_result()
 
     def verify(self, expect, actual, mode):
         if mode.upper() == "OBJECT":
