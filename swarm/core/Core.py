@@ -159,7 +159,8 @@ class Core(Fixture):
             if self._wait_time:
                 time.sleep(int(self._wait_time))
         except ValueError:
-            self._actual_result_for_dis = "返回信息：\t{}\n异常信息：\n{}".format(resp.text, traceback.format_exc())
+            self._actual_result_for_dis = "返回信息：\t{}\n异常信息：\n{}".format(resp.text, traceback.format_exc())\
+                .decode("unicode_escape")
         finally:
             resp.close()
             self.teardown()
