@@ -119,7 +119,7 @@ class CoreTest(unittest.TestCase):
         self.assertEqual("PASS", resp)
 
     def test_do_verify_by_dict_contains_2(self):
-        expert = {"_s_path":"%$.result.*%","_s_value":{"push_days":90}}
+        expert = {"_s_path":"%$.result.*%","_s_value":{"push_days":90,"status": 1}}
         data = {
                   "errcode": 0,
                   "result": {
