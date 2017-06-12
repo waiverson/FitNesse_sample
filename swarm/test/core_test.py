@@ -85,3 +85,51 @@ class CoreTest(unittest.TestCase):
         method = "POST"
         resp = Core().do_method(method=method, url=uri, data=data)
         self.assertIn("token", resp.content)
+
+    def test_do_verify_by_equal(self):
+        expert = 90
+        data = {
+                  "errcode": 0,
+                  "result": {
+                    "push_condition": {"att_value": "2", "col_name": "industry", "att_type": "int", "col_desc": "\u884c\u4e1a-KOM", "att_name": "new_num", "att_desc": "\u6700\u5c0f\u65b0\u589e\u9879\u76ee\u6570(\u4e2a)"},
+                    "push_days": 90,
+                    "status": 1
+                  },
+                  "status": 0
+                }
+        ce = Core()
+        ce._diff_by = "Equal"
+        resp = ce.verify(expert, data["result"]["push_days"], "Assert")
+        self.assertEqual("PASS", resp)
+
+    def test_do_verify_by_dict_contains(self):
+        expert = {"_s_path":"%result%","_s_value":{"push_days":90}}
+        data = {
+                  "errcode": 0,
+                  "result": {
+                    "push_condition": {"att_value": "2", "col_name": "industry", "att_type": "int", "col_desc": "\u884c\u4e1a-KOM", "att_name": "new_num", "att_desc": "\u6700\u5c0f\u65b0\u589e\u9879\u76ee\u6570(\u4e2a)"},
+                    "push_days": 90,
+                    "status": 1
+                  },
+                  "status": 0
+                }
+        ce = Core()
+        ce._diff_by = "DICTCONTAINSSUBSET"
+        resp = ce.verify(expert, data, "Assert")
+        self.assertEqual("PASS", resp)
+
+    def test_do_verify_by_dict_contains_2(self):
+        expert = {"_s_path":"%$.result.*%","_s_value":{"push_days":90}}
+        data = {
+                  "errcode": 0,
+                  "result": {
+                    "push_condition": {"att_value": "2", "col_name": "industry", "att_type": "int", "col_desc": "\u884c\u4e1a-KOM", "att_name": "new_num", "att_desc": "\u6700\u5c0f\u65b0\u589e\u9879\u76ee\u6570(\u4e2a)"},
+                    "push_days": 90,
+                    "status": 1
+                  },
+                  "status": 0
+                }
+        ce = Core()
+        ce._diff_by = "DICTCONTAINSSUBSET"
+        resp = ce.verify(expert, data, "Assert")
+        self.assertEqual("PASS", resp)

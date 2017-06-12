@@ -141,6 +141,8 @@ class AssertCompareMode(assertValidate):
                     if isinstance(asserter, basestring):
                         asserter = getattr(self, asserter)
                     return asserter(first, second)
+        else:
+            return "expect is not consistent with actual's type, can not assert by assertEqual"
 
     def diff(self, expect, actual, by='EQUAL'):
         try:

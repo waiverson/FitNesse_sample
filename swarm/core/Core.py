@@ -183,10 +183,17 @@ class Core(Fixture):
         self.clean_diff_result()
         self.clean_actual_result()
 
-    def verify(self, expect, actual, mode):
+    def verify(self, expect, actual, mode, by=None):
         if mode.upper() == "OBJECT":
             expect = self.bool_convert(expect)
-        rs = self.compare(expect, actual, mode, by=self._diff_by)
+        if not by:
+            by = self._diff_by
+        if isinstance(expect, dict):
+            actual_locator = expect.get("_s_path", None)
+            if actual_locator:
+                actual = Conversion.with_expr(actual_locator, body=actual)
+                expect = expect.get("_s_value", None)
+        rs = self.compare(expect, actual, mode, by)
         if isinstance(rs, dict):
             rs.update({rs.keys()[0]: filter(self.null_convert, rs[rs.keys()[0]])})
             if not rs.values()[0]:
