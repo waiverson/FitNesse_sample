@@ -202,6 +202,8 @@ class Core(Fixture):
 
     def do_method(self, session=None, method="GET", url=None, headers={},
                           params=None, data=None, timeout=None):
+        if not url:
+            raise ValueError("url is illegal")
         http_request = DefaultHttpRequest().with_uri(url) \
                                            .with_method(method) \
                                            .with_headers(headers) \
