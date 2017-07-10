@@ -6,21 +6,21 @@
 ### 2.1 用例的编写 
     框架关键字：
     url				    请求地址
-    params			  请求参数
-    headers		    请求头
+    params			    请求参数
+    headers		        请求头
     data			    请求body
-    validator		  校验器
-    diff_by			  校验方式
-    expect_result	期望结果，assert校验时，因为会部分匹配，所以格式 
-                     {“_s_path”:“定位表达式”,“_s_value”:“期望值”}
+    validator		    校验器
+    diff_by			    校验方式
+    expect_result	    期望结果，assert校验时，因为会部分匹配，所以格式 
+                          {“_s_path”:“定位表达式”,“_s_value”:“期望值”}
     slot			    中继值，支持对某个值进行缓存，供后续用例传递
-    wait_time		  等待时长
-    actual_result	实际结果
+    wait_time		    等待时长
+    actual_result	    实际结果
     get				    HTTP GET方法
     post			    HTTP POST方法，body类型为json
-    post_by_dict	HTTP POST方法，body类型为表单
+    post_by_dict	    HTTP POST方法，body类型为表单
     put				    HTTP PUT方法
-    delete			  HTTP DELETE方法
+    delete			    HTTP DELETE方法
 
 ## 3、	校验器
     校验器在fitnesse中的运用WIKI语法：
@@ -52,12 +52,12 @@
     定位器表达式：$.attributeName1 [ selector ].attributeName2
     其中$是根元素，选择从节点的所有直接子元素，attributeName1指定到具体子元素，[selector]限制子元素中的结果，attributeName2从前面计算过的结果中选择子元素。
 #### 4.1.1、完整语法
-    操作符						  描述
-    $							    根对象
-    @							    当前的对象/元素
-    .							    子对象/元素操作符
+    操作符						    描述
+    $					          根对象
+    @							  当前的对象/元素
+    .							  子对象/元素操作符
     ..							  递归下降
-    *                 通配符。匹配所有的对象/元素
+    *                             通配符。匹配所有的对象/元素
     [ ]							  选择器（selector）操作符
 #### 4.1.2、选择器（selector）
     selector选择满足其表达式的数组元素。支持嵌套路径，使用比较运算符或者参考数据集的其他部分。
