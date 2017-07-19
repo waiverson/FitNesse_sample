@@ -111,8 +111,7 @@
     |enter|url|${host1}/dashboard|
     |enter|headers|{'SESSION-TOKEN':'%result@token%'}|
     |enter|params|{'name':'automation_shared_dashboard','app_id':3,'type':1}|
-    |enter|data|{"dimension":{"measure":{"method":1,"col_name":"project_name"},"group":{"col_name":"project_sales","col_type":"varchar","cond_second":""}},"condition":[{"col_name":"project_created_at","cond":"scope","value":"2017-01-01 11:50,2017-02-10 11:50"}]}|
-    |enter|expect_result|{"type":"object","properties":{"errcode":{"type":"integer"},"result":{"type":"object","properties":{"id":{"type":"integer"}}},"status":{"type":"integer"}}}|
+    |enter|data|${json_schema}|
     |enter|validator|JSON_SCHEMA|
     |press|post|
     |check|actual_result||
