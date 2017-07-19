@@ -80,8 +80,8 @@ class CoreTest(unittest.TestCase):
         pass
 
     def test_do_method(self):
-        uri = "http://172.20.0.223/lae/auth/login"
-        data = {'user':'2215649033@qq.com','password':'123456@a'}
+        uri = "http://172.20.0.xxx/login"
+        data = {'user':'xxx@qq.com','password':'xxx@a'}
         method = "POST"
         resp = Core().do_method(method=method, url=uri, data=data)
         self.assertIn("token", resp.content)
