@@ -99,16 +99,16 @@
 
 ## 6、	fitnesse用例sample
     slot，json_schema的例子
-    !include .SWARM.host226
+    !include .SWARM.host
     !include .SWARM.pythonenv_new
     
     !style_caps{!style_fit_label[SetUp-创建dashboard测试资源]}
     !|ActionFixture|
     |start|Core|
-    |enter|url|${host1}/lae/auth/login|
-    |enter|data|{${lae_fx_admin}}|
+    |enter|url|${host1}/login|
+    |enter|data|{${admin_user}}|
     |press|post_by_dict|
-    |enter|url|${host1}/lae/dashboard/chart/add|
+    |enter|url|${host1}/dashboard|
     |enter|headers|{'SESSION-TOKEN':'%result@token%'}|
     |enter|params|{'name':'automation_shared_dashboard','app_id':3,'type':1}|
     |enter|data|{"dimension":{"measure":{"method":1,"col_name":"project_name"},"group":{"col_name":"project_sales","col_type":"varchar","cond_second":""}},"condition":[{"col_name":"project_created_at","cond":"scope","value":"2017-01-01 11:50,2017-02-10 11:50"}]}|
@@ -116,7 +116,7 @@
     |enter|validator|JSON_SCHEMA|
     |press|post|
     |check|actual_result||
-    |enter|url|${host1}/lae/dashboard/chart/list|
+    |enter|url|${host1}/dashboard/|
     |enter|validator|JSON_SCHEMA|
     |press|get|
     |check|actual_result||
@@ -124,13 +124,13 @@
 
 -------
 
-    !style_ignore(!style_collapse_rim[分享给多个用户])
+    !style_ignore(!style_collapse_rim[分享])
     !|ActionFixture|
     |start|Core|
-    |enter|url|${host1}/lae/server/dashboard/chart/share|
-    |enter|expect_result|{"properties":{"errcode":{"maximum":0,"minimum":0,"type":"integer"},"status":{"default":0,"description":"","maximum":0,"minimum":0,"type":"integer"}},"required":["status","errcode"],"type":"object"}|
+    |enter|url|${host1}/share|
+    |enter|expect_result|${json_schema}|
     |enter|validator|JSON_SCHEMA|
-    |enter|data|{"id":'%slot%',"uids":'807,705'}|
+    |enter|data|{"id":'%slot%',"uids":'1'}|
     |press|post_by_dict|
     |check|actual_result||
     |check|diff_result|PASS|
@@ -140,9 +140,9 @@
     !style_caps{!style_fit_grey[TearDown-删除测试数据]}
     !|ActionFixture|
     |start|Core|
-    |enter|url|${host1}/lae/dashboard/chart/del|
+    |enter|url|${host1}/dashboard|
     |enter|data|{'ids':'%slot%'}|
-    |enter|expect_result|{"type":"object","properties":{"errcode":{"type":"integer"},"status":{"type":"integer"}}}|
+    |enter|expect_result|${json_schema}|
     |enter|validator|JSON_SCHEMA|
     |press|post_by_dict|
     |check|actual_result||
@@ -151,32 +151,32 @@
 -------
 
        assert断言
-       !include .SWARM.host226
+       !include .SWARM.host
        !include .SWARM.pythonenv_new
        
        !style_ignore(!style_collapse_rim[登录-获取Token])
        !|ActionFixture|
        |start|Core|
-       |enter|url|${host1}/lae/auth/login|
-       |enter|data|{${lae_fx_admin}}|
+       |enter|url|${host1}/auth|
+       |enter|data|{${admin}}|
        |press|post_by_dict|
        |enter|headers|{'SESSION-TOKEN':'%result@token%'}|
        
-       !style_ignore(!style_collapse_rim[获取销售热点图表信息])
+       !style_ignore(!style_collapse_rim[获取图表信息])
        !|ActionFixture|
        |start|Core|
-       |enter|url|${host1}/lae/cal/org/clue/hotspot|
+       |enter|url|${host1}/hotspot|
        |enter|params|{"app_id":3}|
        |enter|validator|JSON_SCHEMA|
-       |enter|expect_result|{"properties":{"errcode":{"type":"integer"},"result":{"items":{"properties":{"date":{"type":"string"},"filter_key":{"type":"string"},"name":{"type":"string"},"x":{"items":{"type":"string"},"type":"array"},"x_name":{"type":"string"},"y":{"items":{"type":"integer"},"type":"array"},"y_name":{"type":"string"}},"required":["filter_key","x_name","name","y","date","x","y_name"],"type":"object"},"type":"array"},"status":{"type":"integer"}},"required":["status","errcode","result"],"type":"object"}|
+       |enter|expect_result|${json_schema}|
        |press|get|
        |check|actual_result||
        |check|diff_result|PASS|
        
-       !style_ignore(!style_collapse_rim[获取默认销售热点配置])
+       !style_ignore(!style_collapse_rim[获取热点配置])
        !|ActionFixture|
        |start|Core|
-       |enter|url|${host1}/lae/server/hotspot/push/cfg|
+       |enter|url|${host1}/hotspot|
        |enter|validator|ASSERT|
        |enter|diff_by|DictContainsSubset|
        |enter|expect_result|{"_s_path":"%$.result.*%","_s_value":{"push_days":90}}|
