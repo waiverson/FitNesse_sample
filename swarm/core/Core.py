@@ -1,9 +1,8 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-
 from fit.Fixture import Fixture
-import requests, json, sys, time,traceback
+import requests, json, sys, time, traceback
 from restdata import RestResponse
 from conversion import Conversion
 from default_http_request import DefaultHttpRequest
@@ -14,7 +13,6 @@ sys.setdefaultencoding("utf-8")
 
 
 class Core(Fixture):
-
     _typeDict = {}
 
     # 用于fitnesse case间传递
@@ -40,11 +38,13 @@ class Core(Fixture):
         self._wait_time = ""
 
     _typeDict["url"] = "String"
+
     def url(self, s):
         if s:
             self._url = Core.realistic(str(s))
 
     _typeDict["headers"] = "Dict"
+
     def headers(self, s):
         if s:
             real_v = Core.realistic(dict(s))
@@ -53,93 +53,111 @@ class Core(Fixture):
             Core.g_header.update(real_v)
 
     _typeDict["params"] = "Dict"
+
     def params(self, s):
         if s:
             self._params.update(Core.realistic(dict(s)))
 
     _typeDict["data"] = "Dict"
+
     def data(self, s):
         if s:
             self._data.update(Core.realistic(dict(s)))
 
     _typeDict["expect_result"] = "Dict"
+
     def expect_result(self, s):
         self._expect_result = dict(s)
 
     _typeDict["diff_by"] = "String"
+
     def diff_by(self, s):
-    # 提供校验方式："kv"：key&value值校验，"struct":比较key&value类型校验
+        # 提供校验方式："kv"：key&value值校验，"struct":比较key&value类型校验
         self._diff_by = s
 
     _typeDict["diff_result"] = "String"
+
     def diff_result(self):
         return self._diff_result
 
     _typeDict["actual_result"] = "String"
+
     def actual_result(self):
-    #将http response的结果返回到fitnesse显示
+        # 将http response的结果返回到fitnesse显示
         return self._actual_result_for_dis
 
     _typeDict["last_response"] = "Default"
+
     def last_response(self, s):
-    # 提供将调用完的结果返回到fitnesse（必要时）
+        # 提供将调用完的结果返回到fitnesse（必要时）
         Core.g_last_resp = s
 
     _typeDict["validator"] = "String"
+
     def validator(self, s="JSON_SCHEMA"):
-    # 设置校验器类型：OBJECT | JSON_SCHEMA | ASSERT
+        # 设置校验器类型：OBJECT | JSON_SCHEMA | ASSERT
         self._validator = s
 
     _typeDict["wait_time"] = "String"
+
     def wait_time(self, s):
-    # 设置等待时长，单位：秒
+        # 设置等待时长，单位：秒
         self._wait_time = s
 
     _typeDict["slot"] = "String"
+
     def slot(self, s):
-    # 将某值缓存起来，以便后续接口直接使用
+        # 将某值缓存起来，以便后续接口直接使用
         Core.g_slot = Core.realistic(s)
 
     _typeDict["debug"] = "String"
+
     def debug(self):
-    #通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
+        # 通过|check|debug||,将self._url（其他self字段）返回到fitnesse下，用于调试。
         return "url:{url}\nheader:{header}\nparameter:{params}\nbody:{data}\nslot:{slot}".format(url=self._url,
-                                                               header=str(self._header or Core.g_header),
-                                                               params = str(self._params),
-                                                               data = str(self._data),
-                                                               slot = str(Core.g_slot))
+                                                                                                 header=str(
+                                                                                                     self._header or Core.g_header),
+                                                                                                 params=str(
+                                                                                                     self._params),
+                                                                                                 data=str(self._data),
+                                                                                                 slot=str(Core.g_slot))
 
     _typeDict["get"] = "Default"
+
     def get(self):
         resp = self.do_method(session=Core.g_session, method="GET", url=self._url,
-                                      params=self._params, timeout=Core.g_timeout)
+                              params=self._params, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["post_by_dict"] = "Default"
+
     def post_by_dict(self):
-        #传递表单形式的数据
+        # 传递表单形式的数据
         resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
-                                      params=self._params, data=self._data, timeout=Core.g_timeout)
+                              params=self._params, data=self._data, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["post"] = "Default"
+
     def post(self):
-        #传递json形式的数据
+        # 传递json形式的数据
         data = json.dumps(self._data)
         resp = self.do_method(session=Core.g_session, method="POST", url=self._url,
-                                      params=self._params, data=data, timeout=Core.g_timeout)
+                              params=self._params, data=data, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["put"] = "Default"
+
     def put(self):
         resp = self.do_method(session=Core.g_session, method="PUT", url=self._url,
-                                      params=self._params, timeout=Core.g_timeout)
+                              params=self._params, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
     _typeDict["delete"] = "Default"
+
     def delete(self):
         resp = self.do_method(session=Core.g_session, method="DELETE", url=self._url,
-                                      params=self._params, timeout=Core.g_timeout)
+                              params=self._params, timeout=Core.g_timeout)
         self.exercise(self._expect_result, resp, self._validator)
 
     def setup(self):
@@ -159,7 +177,7 @@ class Core(Fixture):
             if self._wait_time:
                 time.sleep(int(self._wait_time))
         except ValueError:
-            self._actual_result_for_dis = "返回信息：\t{}\n异常信息：\n{}".format(resp.text, traceback.format_exc())\
+            self._actual_result_for_dis = "返回信息：\t{}\n异常信息：\n{}".format(resp.text, traceback.format_exc()) \
                 .decode("unicode_escape")
         finally:
             resp.close()
@@ -201,17 +219,17 @@ class Core(Fixture):
         return "PASS" if not rs else str(rs)
 
     def do_method(self, session=None, method="GET", url=None, headers={},
-                          params=None, data=None, timeout=None):
+                  params=None, data=None, timeout=None):
         if not url:
             raise ValueError("url is illegal")
         http_request = DefaultHttpRequest().with_uri(url) \
-                                           .with_method(method) \
-                                           .with_headers(headers) \
-                                           .with_params(params) \
-                                           .with_data(data) \
-                                           .with_session(session=session) \
-                                           .with_timeout(timeout=timeout) \
-                                           .new_request()
+            .with_method(method) \
+            .with_headers(headers) \
+            .with_params(params) \
+            .with_data(data) \
+            .with_session(session=session) \
+            .with_timeout(timeout=timeout) \
+            .new_request()
 
         resp = http_request.send()
         return resp
@@ -228,15 +246,16 @@ class Core(Fixture):
         return validator.diff(actual, expect, by)
 
     def bool_convert(self, data):
-        #fitnesse不支持bool值,用str代替
+        # fitnesse不支持bool值,用str代替
         def type_handler(data):
             if isinstance(data, dict):
                 for k, v in data.items():
                     if isinstance(v, dict):
                         type_handler(v)
                     if isinstance(v, str) and v.lower() in ("false", "true"):
-                        data.update({k:json.loads(v.lower())})
+                        data.update({k: json.loads(v.lower())})
                 return data
+
         return type_handler(data)
 
     def null_convert(self, data):
@@ -250,8 +269,4 @@ class Core(Fixture):
                 return not bool(
                     k == '%s'
                 )
-		return is_placeholder(kv)
-
-
-
-
+                return is_placeholder(kv)
