@@ -1,8 +1,7 @@
 # encoding:utf-8
 __author__ = 'xyc'
 
-import re, json
-from collections import Iterable
+import re
 
 from json2obejct import recursive_json_loads
 import objectpath
