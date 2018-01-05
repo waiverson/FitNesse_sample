@@ -92,10 +92,7 @@ class Variables(object):
             return variable
 
     def _is_expr(self, text):
-        if isinstance(text, str) and "%" in text:
-            return True
-        else:
-            False
+        return isinstance(text, str) and "%" in text
 
     def _is_pure_expr(self, expr):
         return expr.startswith('%') and expr.endswith('%')
